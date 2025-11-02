@@ -1,10 +1,14 @@
 # CI override for docker-compose.yml
-# This removes Loki logging driver dependencies for CI environments where
-# the Loki Docker plugin is not available.
+# This removes Loki logging driver dependencies and disables Ollama for CI
+# environments where these services are not available.
 #
-# In CI environments (GitHub Actions), the Loki logging plugin needs to be
-# installed separately. Instead of installing the plugin, we use the default
-# json-file driver which is available everywhere.
+# In CI environments (GitHub Actions):
+# - The Loki logging plugin needs to be installed separately
+# - Ollama is not available and would cause 30s timeouts
+#
+# Instead we use:
+# - json-file driver (available everywhere)
+# - Disable Ollama to use rule-based fallbacks
 #
 # Usage:
 #   docker compose -f docker-compose.yml -f docker-compose.ci.yml build
@@ -16,6 +20,9 @@
 
 services:
   textanalyzer:
+    environment:
+      - USE_OLLAMA=false
+      - OLLAMA_URL=
     logging:
       driver: "json-file"
       options:
@@ -23,6 +30,8 @@ services:
         max-file: "3"
 
   scraper:
+    environment:
+      - OLLAMA_URL=
     logging:
       driver: "json-file"
       options:
