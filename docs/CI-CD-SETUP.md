@@ -48,7 +48,7 @@ See **[GitHub Secrets Setup Guide](./GITHUB-SECRETS-SETUP.md)** for detailed ins
 1. **PULUMI_ACCESS_TOKEN** - Pulumi Cloud authentication
 2. **DIGITALOCEAN_TOKEN** - Digital Ocean API access
 3. **GHCR_TOKEN** - Container registry push access
-4. **SUBMODULE_TOKEN** - Private submodule access
+4. **GH_TOKEN** - Private submodule access + release workflow triggering
 
 **Repository access**: Select `All repositories` or specific repos
 
