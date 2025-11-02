@@ -18,6 +18,10 @@ spec:
         {{- include "docutag.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: grafana
     spec:
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+        runAsNonRoot: true
       containers:
       - name: grafana
         image: grafana/grafana:latest

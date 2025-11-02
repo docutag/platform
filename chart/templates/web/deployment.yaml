@@ -37,7 +37,7 @@ spec:
           value: {{ include "docutag.fullname" . }}-tempo
         ports:
         - name: http
-          containerPort: {{ .Values.web.service.port }}
+          containerPort: 8080
           protocol: TCP
         livenessProbe:
           {{- toYaml .Values.web.livenessProbe | nindent 12 }}

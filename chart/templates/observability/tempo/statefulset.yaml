@@ -19,6 +19,10 @@ spec:
         {{- include "docutag.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: tempo
     spec:
+      securityContext:
+        fsGroup: 10001
+        runAsUser: 10001
+        runAsNonRoot: true
       containers:
       - name: tempo
         image: grafana/tempo:latest
