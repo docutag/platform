@@ -41,15 +41,14 @@ Infrastructure Workflow (manual/automatic)
 
 See **[GitHub Secrets Setup Guide](./GITHUB-SECRETS-SETUP.md)** for detailed instructions.
 
-### Quick Setup (5 Organization Secrets)
+### Quick Setup (4 Organization Secrets)
 
 **Navigate to**: `Organization Settings → Secrets and variables → Actions`
 
 1. **PULUMI_ACCESS_TOKEN** - Pulumi Cloud authentication
 2. **DIGITALOCEAN_TOKEN** - Digital Ocean API access
 3. **GHCR_TOKEN** - Container registry push access
-4. **SUBMODULE_TOKEN** - Private submodule access
-5. **RELEASE_TOKEN** - Trigger production deployment on release (can use same token as SUBMODULE_TOKEN)
+4. **GH_TOKEN** - Private submodule access + release workflow triggering
 
 **Repository access**: Select `All repositories` or specific repos
 
@@ -73,7 +72,7 @@ pulumi login
 
 ### Step 2: Add Organization Secrets
 
-Add the 5 secrets to **Organization Settings → Secrets and variables → Actions**
+Add the 4 secrets to **Organization Settings → Secrets and variables → Actions**
 
 (See [GITHUB-SECRETS-SETUP.md](./GITHUB-SECRETS-SETUP.md) for detailed instructions)
 

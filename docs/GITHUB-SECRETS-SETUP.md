@@ -18,7 +18,7 @@ All secrets can be configured once at the organization level and shared across a
 
 **Navigate to**: `Organization Settings → Secrets and variables → Actions → New organization secret`
 
-Add these 5 secrets:
+Add these 4 secrets:
 
 ---
 
@@ -84,70 +84,21 @@ Add these 5 secrets:
 
 ---
 
-### 4. SUBMODULE_TOKEN
+### 4. GH_TOKEN
 
-**Purpose**: Access private submodule repositories
+**Purpose**:
+- Access private submodule repositories during checkout
+- Trigger production deployment workflow when releases are created
 
-**Option A: Personal Access Token (Simple)**
-
-```bash
-1. Visit: https://github.com/settings/tokens
-2. Generate new token (classic)
-3. Name: "Submodule Access"
-4. Scopes:
-   ✓ repo (Full control of private repositories)
-5. Generate token
-6. Copy: ghp_xxxxx...
-```
-
-**Option B: GitHub App (Better - Recommended)**
-
-Instead of a PAT, use a GitHub App for better security:
-
-```bash
-1. Create GitHub App:
-   - Settings → Developer settings → GitHub Apps → New App
-   - Name: "DocuTag Submodules"
-   - Permissions: Repository → Contents → Read-only
-   - Install on organization
-
-2. Generate private key and get App ID
-
-3. Use in workflows:
-   - uses: actions/create-github-app-token@v1
-     with:
-       app-id: ${{ secrets.APP_ID }}
-       private-key: ${{ secrets.APP_PRIVATE_KEY }}
-```
-
-**For simplicity, use Option A (PAT) for now.**
-
-**Add to GitHub**:
-- Name: `SUBMODULE_TOKEN`
-- Value: `ghp_xxxxx...`
-- Repository access: `All repositories`
-
-**Note**: This token needs access to all submodule repos:
-- docutag/controller
-- docutag/scraper
-- docutag/textanalyzer
-- docutag/scheduler
-- docutag/web
-- docutag/infra
-
----
-
-### 5. RELEASE_TOKEN
-
-**Purpose**: Trigger production deployment workflow when releases are created
-
-**Why needed**: GitHub's built-in `GITHUB_TOKEN` cannot trigger other workflows (security limitation to prevent infinite loops). To enable automatic production deployment when releases are published, we need a Personal Access Token.
+**Why needed**:
+- Submodules: Workflows need access to private submodule repos (controller, scraper, textanalyzer, scheduler, web, infra)
+- Release triggering: GitHub's built-in `GITHUB_TOKEN` cannot trigger other workflows (security limitation to prevent infinite loops)
 
 **How to get**:
 ```bash
 1. Visit: https://github.com/settings/tokens
 2. Generate new token (classic)
-3. Name: "Release Workflow Token"
+3. Name: "GitHub Actions Token"
 4. Scopes:
    ✓ repo (Full control of private repositories)
    ✓ write:packages (optional, for consistency)
@@ -156,16 +107,17 @@ Instead of a PAT, use a GitHub App for better security:
 ```
 
 **Add to GitHub**:
-- Name: `RELEASE_TOKEN`
+- Name: `GH_TOKEN`
 - Value: `ghp_xxxxx...`
 - Repository access: `All repositories`
 
 **What it enables**:
+- ✅ Checkout private submodule repositories in workflows
 - ✅ Release creation automatically triggers production deployment workflow
 - ✅ Full end-to-end automation: merge to main → build images → create release → deploy to production
 - ✅ No manual workflow triggers needed
 
-**Note**: You can use the same token as `SUBMODULE_TOKEN` if it has `repo` scope, or create a separate token for clearer auditing.
+**Note**: This single token replaces the need for separate SUBMODULE_TOKEN and RELEASE_TOKEN, simplifying secret management.
 
 ---
 

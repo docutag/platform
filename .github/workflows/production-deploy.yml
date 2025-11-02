@@ -26,7 +26,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-          token: ${{ secrets.SUBMODULE_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Determine version to deploy
         id: version
