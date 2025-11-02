@@ -16,12 +16,5 @@ sources:
 maintainers:
   - name: DocuTag Team
     email: team@docutag.io
-dependencies:
-  - name: redis
-    version: 18.0.0
-    repository: https://charts.bitnami.com/bitnami
-    condition: redis.enabled
-  - name: postgresql
-    version: 13.0.0
-    repository: https://charts.bitnami.com/bitnami
-    condition: postgresql.enabled
+# Dependencies removed - using custom PostgreSQL and Redis deployments
+# with official Alpine images instead of Bitnami subcharts

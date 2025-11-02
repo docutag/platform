@@ -82,75 +82,46 @@ web:
       cpu: "250m"
 
 redis:
-  global:
-    imageRegistry: docker.io
+  enabled: true
   image:
-    repository: bitnami/redis
-    tag: 7.2.4-debian-11-r0
-  master:
-    persistence:
-      size: 20Gi
-    resources:
-      requests:
-        memory: "250Mi"
-        cpu: "250m"
-      limits:
-        memory: "500Mi"
-        cpu: "500m"
+    repository: redis
+    tag: 8.2.2-alpine
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: do-block-storage
+  resources:
+    requests:
+      memory: "250Mi"
+      cpu: "250m"
+    limits:
+      memory: "500Mi"
+      cpu: "500m"
 
 # Self-hosted PostgreSQL with HA (saves ~$240/month vs managed)
 # Passwords are automatically generated and managed by Pulumi (stored encrypted in Pulumi state)
 # Do not set passwords here - they will be overridden by Pulumi deployment
 postgresql:
   enabled: true
-  global:
-    imageRegistry: docker.io
   image:
-    repository: bitnami/postgresql
-    tag: 15.3.0-debian-11-r24
-  architecture: replication  # Primary + read replica for HA
-  auth:
-    database: docutag
-    username: docutag
-    # password: Set automatically by Pulumi with secure random generation
-    # replicationPassword: Set automatically by Pulumi with secure random generation
+    repository: postgres
+    tag: 14.19-alpine3.21
+  database: docutag
+  username: docutag
+  # password: Set automatically by Pulumi with secure random generation
 
-  # PostgreSQL configuration tuned for 500MB memory footprint
-  postgresqlConfiguration:
-    shared_buffers: "128MB"              # 25% of memory (500MB * 0.25)
-    effective_cache_size: "384MB"        # 75% of memory (500MB * 0.75)
-    maintenance_work_mem: "64MB"         # For VACUUM, CREATE INDEX
-    work_mem: "16MB"                     # Per-operation memory
-    max_connections: "100"               # Reduced for lower memory
-    wal_buffers: "4MB"                   # WAL buffer size
-    checkpoint_completion_target: "0.9"  # Spread checkpoints
-    random_page_cost: "1.1"              # SSD optimization
-    effective_io_concurrency: "200"      # SSD parallelism
-    max_wal_size: "1GB"                  # WAL size before checkpoint
-    min_wal_size: "256MB"                # Minimum WAL size
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: do-block-storage
 
-  primary:
-    persistence:
-      size: 100Gi
-    resources:
-      requests:
-        memory: "500Mi"
-        cpu: "250m"
-      limits:
-        memory: "500Mi"
-        cpu: "500m"
-
-  readReplicas:
-    replicaCount: 1
-    persistence:
-      size: 100Gi
-    resources:
-      requests:
-        memory: "500Mi"
-        cpu: "250m"
-      limits:
-        memory: "500Mi"
-        cpu: "500m"
+  resources:
+    requests:
+      memory: "500Mi"
+      cpu: "250m"
+    limits:
+      memory: "500Mi"
+      cpu: "500m"
 
 # Use external managed DB if preferred (disable postgresql above)
 externalDatabase:
