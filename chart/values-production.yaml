@@ -97,27 +97,43 @@ postgresql:
     username: docutag
     # password: Set automatically by Pulumi with secure random generation
     # replicationPassword: Set automatically by Pulumi with secure random generation
+
+  # PostgreSQL configuration tuned for 500MB memory footprint
+  postgresqlConfiguration:
+    shared_buffers: "128MB"              # 25% of memory (500MB * 0.25)
+    effective_cache_size: "384MB"        # 75% of memory (500MB * 0.75)
+    maintenance_work_mem: "64MB"         # For VACUUM, CREATE INDEX
+    work_mem: "16MB"                     # Per-operation memory
+    max_connections: "100"               # Reduced for lower memory
+    wal_buffers: "4MB"                   # WAL buffer size
+    checkpoint_completion_target: "0.9"  # Spread checkpoints
+    random_page_cost: "1.1"              # SSD optimization
+    effective_io_concurrency: "200"      # SSD parallelism
+    max_wal_size: "1GB"                  # WAL size before checkpoint
+    min_wal_size: "256MB"                # Minimum WAL size
+
   primary:
     persistence:
       size: 100Gi
     resources:
       requests:
-        memory: "1Gi"
-        cpu: "500m"
+        memory: "500Mi"
+        cpu: "250m"
       limits:
-        memory: "2Gi"
-        cpu: "1000m"
+        memory: "500Mi"
+        cpu: "500m"
+
   readReplicas:
     replicaCount: 1
     persistence:
       size: 100Gi
     resources:
       requests:
-        memory: "1Gi"
-        cpu: "500m"
+        memory: "500Mi"
+        cpu: "250m"
       limits:
-        memory: "2Gi"
-        cpu: "1000m"
+        memory: "500Mi"
+        cpu: "500m"
 
 # Use external managed DB if preferred (disable postgresql above)
 externalDatabase:
