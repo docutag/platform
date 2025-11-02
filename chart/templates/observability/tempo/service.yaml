@@ -1,0 +1,31 @@
+{{- if .Values.observability.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "docutag.fullname" . }}-tempo
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tempo
+spec:
+  type: ClusterIP
+  ports:
+  - name: otlp-grpc
+    port: 4317
+    targetPort: 4317
+    protocol: TCP
+  - name: otlp-http
+    port: 4318
+    targetPort: 4318
+    protocol: TCP
+  - name: http
+    port: 3200
+    targetPort: 3200
+    protocol: TCP
+  - name: jaeger-grpc
+    port: 14250
+    targetPort: 14250
+    protocol: TCP
+  selector:
+    {{- include "docutag.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: tempo
+{{- end }}

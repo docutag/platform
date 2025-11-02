@@ -1,0 +1,61 @@
+{{- if .Values.observability.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "docutag.fullname" . }}-tempo
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tempo
+spec:
+  serviceName: {{ include "docutag.fullname" . }}-tempo
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "docutag.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: tempo
+  template:
+    metadata:
+      labels:
+        {{- include "docutag.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: tempo
+    spec:
+      containers:
+      - name: tempo
+        image: grafana/tempo:latest
+        args:
+          - "-config.file=/etc/tempo.yaml"
+        ports:
+        - name: otlp-grpc
+          containerPort: 4317
+          protocol: TCP
+        - name: otlp-http
+          containerPort: 4318
+          protocol: TCP
+        - name: http
+          containerPort: 3200
+          protocol: TCP
+        - name: jaeger-grpc
+          containerPort: 14250
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/tempo.yaml
+          subPath: tempo.yaml
+        - name: data
+          mountPath: /var/tempo
+        resources:
+          {{- toYaml .Values.observability.tempo.resources | nindent 10 }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "docutag.fullname" . }}-tempo
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ include "docutag.storageClass" . }}
+      resources:
+        requests:
+          storage: {{ .Values.observability.tempo.persistence.size }}
+{{- end }}

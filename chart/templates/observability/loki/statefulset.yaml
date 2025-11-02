@@ -1,0 +1,63 @@
+{{- if .Values.observability.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "docutag.fullname" . }}-loki
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+    app.kubernetes.io/component: loki
+spec:
+  serviceName: {{ include "docutag.fullname" . }}-loki
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "docutag.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: loki
+  template:
+    metadata:
+      labels:
+        {{- include "docutag.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: loki
+    spec:
+      containers:
+      - name: loki
+        image: grafana/loki:latest
+        args:
+          - "-config.file=/etc/loki/loki.yaml"
+        ports:
+        - name: http
+          containerPort: 3100
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/loki
+        - name: data
+          mountPath: /loki
+        resources:
+          {{- toYaml .Values.observability.loki.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: 3100
+          initialDelaySeconds: 45
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3100
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "docutag.fullname" . }}-loki
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ include "docutag.storageClass" . }}
+      resources:
+        requests:
+          storage: {{ .Values.observability.loki.persistence.size }}
+{{- end }}
