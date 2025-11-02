@@ -1,0 +1,41 @@
+{{- if .Values.asynqmon.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "docutag.fullname" . }}-test-asynqmon
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+    app.kubernetes.io/component: test
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+  - name: test
+    image: curlimages/curl:latest
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        echo "Testing asynqmon (queue monitoring) UI..."
+
+        BASE_URL="http://{{ include "docutag.fullname" . }}-asynqmon:8081"
+
+        # Wait for service to be ready
+        sleep 5
+
+        # Test root endpoint (asynqmon web UI)
+        echo "→ Testing / endpoint..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" $BASE_URL/)
+        if [ "$response" != "200" ]; then
+          echo "✗ Asynqmon UI failed (HTTP $response)"
+          exit 1
+        fi
+        echo "  ✓ Asynqmon UI accessible"
+
+        echo ""
+        echo "✓ Asynqmon test passed"
+        exit 0
+{{- end }}
