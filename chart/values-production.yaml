@@ -7,6 +7,10 @@ global:
   imagePullPolicy: IfNotPresent
   storageClass: do-block-storage
 
+# Image pull secrets for GitHub Container Registry
+imagePullSecrets:
+  - name: ghcr-secret
+
 controller:
   replicaCount: 3
   autoscaling:
