@@ -57,6 +57,11 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo update
 
+      - name: Build Helm chart dependencies
+        run: |
+          cd chart
+          helm dependency build
+
       - name: Deploy with Helm
         run: |
           VERSION="${{ steps.version.outputs.version }}"
