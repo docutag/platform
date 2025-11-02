@@ -82,10 +82,11 @@ web:
       cpu: "250m"
 
 redis:
+  global:
+    imageRegistry: ""  # Override global registry to use default docker.io
   image:
     registry: docker.io
     repository: bitnami/redis
-    tag: 7.2.0-debian-11-r0
   master:
     persistence:
       size: 20Gi
@@ -102,10 +103,11 @@ redis:
 # Do not set passwords here - they will be overridden by Pulumi deployment
 postgresql:
   enabled: true
+  global:
+    imageRegistry: ""  # Override global registry to use default docker.io
   image:
     registry: docker.io
     repository: bitnami/postgresql
-    tag: 15.3.0-debian-11-r17
   architecture: replication  # Primary + read replica for HA
   auth:
     database: docutag
