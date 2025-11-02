@@ -183,8 +183,9 @@ ingress:
     certResolver: letsencrypt
 
 # Progressive delivery with Flagger
+# NOTE: Disabled until infrastructure workflow deploys Flagger CRDs
 flagger:
-  enabled: true  # Enable for production
+  enabled: false  # Enable after infrastructure deployment
   strategy: canary  # Gradual rollout
   analysis:
     interval: 1m
