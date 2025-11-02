@@ -1,0 +1,69 @@
+{{- if .Values.observability.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "docutag.fullname" . }}-grafana
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "docutag.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: grafana
+  template:
+    metadata:
+      labels:
+        {{- include "docutag.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+        env:
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: {{ .Values.observability.grafana.env.authAnonymousEnabled | quote }}
+        - name: GF_AUTH_DISABLE_LOGIN_FORM
+          value: {{ .Values.observability.grafana.env.authDisableLoginForm | quote }}
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "docutag.fullname" . }}-grafana
+              key: admin-password
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/grafana
+        - name: datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: dashboards-config
+          mountPath: /etc/grafana/provisioning/dashboards
+        resources:
+          {{- toYaml .Values.observability.grafana.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ include "docutag.fullname" . }}-grafana
+      - name: datasources
+        configMap:
+          name: {{ include "docutag.fullname" . }}-grafana-datasources
+      - name: dashboards-config
+        configMap:
+          name: {{ include "docutag.fullname" . }}-grafana-dashboards
+{{- end }}
