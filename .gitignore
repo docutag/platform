@@ -1,3 +1,7 @@
 scripts
 docutab.png
 .DS_Store
+
+# Helm chart dependencies (built during deployment)
+chart/charts/
+chart/Chart.lock
