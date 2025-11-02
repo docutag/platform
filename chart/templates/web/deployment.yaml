@@ -30,6 +30,11 @@ spec:
           {{- toYaml .Values.securityContext | nindent 12 }}
         image: {{ include "docutag.image" (dict "imageRoot" .Values.web.image "global" .Values.global "context" .) }}
         imagePullPolicy: {{ include "docutag.imagePullPolicy" .Values.global }}
+        env:
+        - name: CONTROLLER_HOST
+          value: {{ include "docutag.fullname" . }}-controller
+        - name: TEMPO_HOST
+          value: {{ include "docutag.fullname" . }}-tempo
         ports:
         - name: http
           containerPort: {{ .Values.web.service.port }}
