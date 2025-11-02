@@ -16,10 +16,10 @@ controller:
     targetCPUUtilizationPercentage: 60
   resources:
     requests:
-      memory: "512Mi"
+      memory: "64Mi"
       cpu: "500m"
     limits:
-      memory: "1Gi"
+      memory: "100Mi"
       cpu: "1000m"
   env:
     generateMockData: false
@@ -31,10 +31,10 @@ scraper:
     size: 100Gi
   resources:
     requests:
-      memory: "1Gi"
+      memory: "64Mi"
       cpu: "1000m"
     limits:
-      memory: "2Gi"
+      memory: "100Mi"
       cpu: "2000m"
 
 textanalyzer:
@@ -46,10 +46,10 @@ textanalyzer:
     targetCPUUtilizationPercentage: 60
   resources:
     requests:
-      memory: "512Mi"
+      memory: "64Mi"
       cpu: "500m"
     limits:
-      memory: "1Gi"
+      memory: "100Mi"
       cpu: "1000m"
   env:
     ollamaModel: "gemma3:12b"
@@ -57,6 +57,13 @@ textanalyzer:
 
 scheduler:
   replicaCount: 2
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "200m"
+    limits:
+      memory: "100Mi"
+      cpu: "400m"
   env:
     defaultSchedule: "0 0 * * *"
 
@@ -68,10 +75,10 @@ web:
     maxReplicas: 8
   resources:
     requests:
-      memory: "256Mi"
+      memory: "128Mi"
       cpu: "200m"
     limits:
-      memory: "512Mi"
+      memory: "256Mi"
       cpu: "400m"
 
 redis:
@@ -166,10 +173,10 @@ observability:
     adminPassword: ""  # Set via --set or secret
     resources:
       requests:
-        memory: "512Mi"
+        memory: "128Mi"
         cpu: "200m"
       limits:
-        memory: "1Gi"
+        memory: "128Mi"
         cpu: "400m"
   loki:
     persistence:
