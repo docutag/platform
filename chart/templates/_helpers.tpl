@@ -140,7 +140,7 @@ Return Redis address
 */}}
 {{- define "docutag.redisAddr" -}}
 {{- if .Values.redis.enabled -}}
-{{- printf "%s-redis-master:6379" (include "docutag.fullname" .) -}}
+{{- printf "%s-redis:6379" (include "docutag.fullname" .) -}}
 {{- else -}}
 {{- .Values.externalRedis.host -}}:{{- .Values.externalRedis.port -}}
 {{- end -}}
@@ -162,7 +162,7 @@ Return PostgreSQL port
 */}}
 {{- define "docutag.postgresqlPort" -}}
 {{- if .Values.postgresql.enabled -}}
-{{- .Values.postgresql.primary.service.ports.postgresql | default 5432 -}}
+5432
 {{- else -}}
 {{- .Values.externalDatabase.port -}}
 {{- end -}}
@@ -173,7 +173,7 @@ Return PostgreSQL database name
 */}}
 {{- define "docutag.postgresqlDatabase" -}}
 {{- if .Values.postgresql.enabled -}}
-{{- .Values.postgresql.auth.database -}}
+{{- .Values.postgresql.database -}}
 {{- else -}}
 {{- .Values.externalDatabase.database -}}
 {{- end -}}
@@ -184,7 +184,7 @@ Return PostgreSQL username
 */}}
 {{- define "docutag.postgresqlUsername" -}}
 {{- if .Values.postgresql.enabled -}}
-{{- .Values.postgresql.auth.username -}}
+{{- .Values.postgresql.username -}}
 {{- else -}}
 {{- .Values.externalDatabase.username -}}
 {{- end -}}

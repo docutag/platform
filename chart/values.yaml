@@ -31,6 +31,11 @@ serviceAccount:
   annotations: {}
   name: ""
 
+# Image pull secrets for private registries
+imagePullSecrets: []
+# Example:
+# - name: ghcr-secret
+
 # Controller service configuration
 controller:
   enabled: true

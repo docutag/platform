@@ -18,6 +18,10 @@ spec:
         {{- include "docutag.componentSelectorLabels" (dict "component" "web" "context" .) | nindent 8 }}
     spec:
       serviceAccountName: {{ include "docutag.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -26,6 +30,11 @@ spec:
           {{- toYaml .Values.securityContext | nindent 12 }}
         image: {{ include "docutag.image" (dict "imageRoot" .Values.web.image "global" .Values.global "context" .) }}
         imagePullPolicy: {{ include "docutag.imagePullPolicy" .Values.global }}
+        env:
+        - name: CONTROLLER_HOST
+          value: {{ include "docutag.fullname" . }}-controller
+        - name: TEMPO_HOST
+          value: {{ include "docutag.fullname" . }}-tempo
         ports:
         - name: http
           containerPort: {{ .Values.web.service.port }}

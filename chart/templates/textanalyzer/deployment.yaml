@@ -20,6 +20,10 @@ spec:
         {{- include "docutag.componentSelectorLabels" (dict "component" "textanalyzer" "context" .) | nindent 8 }}
     spec:
       serviceAccountName: {{ include "docutag.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -41,7 +45,7 @@ spec:
         - name: DB_PORT
           value: {{ include "docutag.postgresqlPort" . | quote }}
         - name: DB_NAME
-          value: "textanalyzer_db"
+          value: {{ include "docutag.postgresqlDatabase" . | quote }}
         - name: DB_USER
           value: {{ include "docutag.postgresqlUsername" . | quote }}
         - name: DB_PASSWORD

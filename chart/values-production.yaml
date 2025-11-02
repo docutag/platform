@@ -7,6 +7,10 @@ global:
   imagePullPolicy: IfNotPresent
   storageClass: do-block-storage
 
+# Image pull secrets for GitHub Container Registry
+imagePullSecrets:
+  - name: ghcr-secret
+
 controller:
   replicaCount: 3
   autoscaling:
@@ -16,11 +20,11 @@ controller:
     targetCPUUtilizationPercentage: 60
   resources:
     requests:
-      memory: "512Mi"
-      cpu: "500m"
+      memory: "64Mi"
+      cpu: "100m"
     limits:
-      memory: "1Gi"
-      cpu: "1000m"
+      memory: "100Mi"
+      cpu: "250m"
   env:
     generateMockData: false
     workerConcurrency: 20
@@ -31,11 +35,11 @@ scraper:
     size: 100Gi
   resources:
     requests:
-      memory: "1Gi"
-      cpu: "1000m"
+      memory: "64Mi"
+      cpu: "100m"
     limits:
-      memory: "2Gi"
-      cpu: "2000m"
+      memory: "100Mi"
+      cpu: "250m"
 
 textanalyzer:
   replicaCount: 3
@@ -46,17 +50,24 @@ textanalyzer:
     targetCPUUtilizationPercentage: 60
   resources:
     requests:
-      memory: "512Mi"
-      cpu: "500m"
+      memory: "64Mi"
+      cpu: "100m"
     limits:
-      memory: "1Gi"
-      cpu: "1000m"
+      memory: "100Mi"
+      cpu: "250m"
   env:
     ollamaModel: "gemma3:12b"
     workerConcurrency: 10
 
 scheduler:
   replicaCount: 2
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "100m"
+    limits:
+      memory: "100Mi"
+      cpu: "250m"
   env:
     defaultSchedule: "0 0 * * *"
 
@@ -68,56 +79,53 @@ web:
     maxReplicas: 8
   resources:
     requests:
-      memory: "256Mi"
-      cpu: "200m"
+      memory: "128Mi"
+      cpu: "100m"
     limits:
-      memory: "512Mi"
-      cpu: "400m"
+      memory: "256Mi"
+      cpu: "250m"
 
 redis:
-  master:
-    persistence:
-      size: 20Gi
-    resources:
-      requests:
-        memory: "512Mi"
-        cpu: "250m"
-      limits:
-        memory: "1Gi"
-        cpu: "500m"
+  enabled: true
+  image:
+    repository: redis
+    tag: 8.2.2-alpine
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: do-block-storage
+  resources:
+    requests:
+      memory: "250Mi"
+      cpu: "250m"
+    limits:
+      memory: "500Mi"
+      cpu: "500m"
 
 # Self-hosted PostgreSQL with HA (saves ~$240/month vs managed)
 # Passwords are automatically generated and managed by Pulumi (stored encrypted in Pulumi state)
 # Do not set passwords here - they will be overridden by Pulumi deployment
 postgresql:
   enabled: true
-  architecture: replication  # Primary + read replica for HA
-  auth:
-    database: docutag
-    username: docutag
-    # password: Set automatically by Pulumi with secure random generation
-    # replicationPassword: Set automatically by Pulumi with secure random generation
-  primary:
-    persistence:
-      size: 100Gi
-    resources:
-      requests:
-        memory: "1Gi"
-        cpu: "500m"
-      limits:
-        memory: "2Gi"
-        cpu: "1000m"
-  readReplicas:
-    replicaCount: 1
-    persistence:
-      size: 100Gi
-    resources:
-      requests:
-        memory: "1Gi"
-        cpu: "500m"
-      limits:
-        memory: "2Gi"
-        cpu: "1000m"
+  image:
+    repository: postgres
+    tag: 14.19-alpine3.21
+  database: docutag
+  username: docutag
+  # password: Set automatically by Pulumi with secure random generation
+
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: do-block-storage
+
+  resources:
+    requests:
+      memory: "500Mi"
+      cpu: "250m"
+    limits:
+      memory: "500Mi"
+      cpu: "500m"
 
 # Use external managed DB if preferred (disable postgresql above)
 externalDatabase:
@@ -150,10 +158,10 @@ observability:
     adminPassword: ""  # Set via --set or secret
     resources:
       requests:
-        memory: "512Mi"
+        memory: "128Mi"
         cpu: "200m"
       limits:
-        memory: "1Gi"
+        memory: "128Mi"
         cpu: "400m"
   loki:
     persistence:
