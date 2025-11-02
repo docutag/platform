@@ -1,0 +1,50 @@
+{{- if .Values.textanalyzer.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "docutag.fullname" . }}-test-textanalyzer
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+    app.kubernetes.io/component: test
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+  - name: test
+    image: curlimages/curl:latest
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        echo "Testing textanalyzer service..."
+
+        BASE_URL="http://{{ include "docutag.fullname" . }}-textanalyzer:8080"
+
+        # Wait for service to be ready
+        sleep 10
+
+        # Test health endpoint
+        echo "→ Testing /health endpoint..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" $BASE_URL/health)
+        if [ "$response" != "200" ]; then
+          echo "✗ TextAnalyzer health check failed (HTTP $response)"
+          exit 1
+        fi
+        echo "  ✓ TextAnalyzer health check passed"
+
+        # Test metrics endpoint
+        echo "→ Testing /metrics endpoint..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" $BASE_URL/metrics)
+        if [ "$response" != "200" ]; then
+          echo "✗ TextAnalyzer metrics endpoint failed (HTTP $response)"
+          exit 1
+        fi
+        echo "  ✓ TextAnalyzer metrics endpoint OK"
+
+        echo ""
+        echo "✓ All textanalyzer tests passed"
+        exit 0
+{{- end }}

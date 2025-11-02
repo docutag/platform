@@ -342,7 +342,8 @@ postgresql:
   # Clean up old unprefixed database tables before upgrade
   # Set to true when upgrading to the version with prefixed table names
   # WARNING: This will delete all data in the old tables!
-  cleanupOldTables: true
+  # This should be set to false after the initial migration is complete
+  cleanupOldTables: false
   persistence:
     enabled: true
     size: 20Gi
