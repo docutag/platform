@@ -144,11 +144,11 @@ observability:
     retention: 90d
     resources:
       requests:
-        memory: "1Gi"
-        cpu: "500m"
+        memory: "250Mi"
+        cpu: "100m"
       limits:
-        memory: "2Gi"
-        cpu: "1000m"
+        memory: "500Mi"
+        cpu: "250m"
   grafana:
     persistence:
       size: 20Gi
