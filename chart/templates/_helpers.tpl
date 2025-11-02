@@ -173,7 +173,7 @@ Return PostgreSQL database name
 */}}
 {{- define "docutag.postgresqlDatabase" -}}
 {{- if .Values.postgresql.enabled -}}
-{{- .Values.postgresql.auth.database -}}
+{{- .Values.postgresql.database -}}
 {{- else -}}
 {{- .Values.externalDatabase.database -}}
 {{- end -}}
@@ -184,7 +184,7 @@ Return PostgreSQL username
 */}}
 {{- define "docutag.postgresqlUsername" -}}
 {{- if .Values.postgresql.enabled -}}
-{{- .Values.postgresql.auth.username -}}
+{{- .Values.postgresql.username -}}
 {{- else -}}
 {{- .Values.externalDatabase.username -}}
 {{- end -}}
