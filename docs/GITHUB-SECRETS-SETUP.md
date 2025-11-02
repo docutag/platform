@@ -18,7 +18,7 @@ All secrets can be configured once at the organization level and shared across a
 
 **Navigate to**: `Organization Settings → Secrets and variables → Actions → New organization secret`
 
-Add these 4 secrets:
+Add these 5 secrets:
 
 ---
 
@@ -134,6 +134,38 @@ Instead of a PAT, use a GitHub App for better security:
 - docutag/scheduler
 - docutag/web
 - docutag/infra
+
+---
+
+### 5. RELEASE_TOKEN
+
+**Purpose**: Trigger production deployment workflow when releases are created
+
+**Why needed**: GitHub's built-in `GITHUB_TOKEN` cannot trigger other workflows (security limitation to prevent infinite loops). To enable automatic production deployment when releases are published, we need a Personal Access Token.
+
+**How to get**:
+```bash
+1. Visit: https://github.com/settings/tokens
+2. Generate new token (classic)
+3. Name: "Release Workflow Token"
+4. Scopes:
+   ✓ repo (Full control of private repositories)
+   ✓ write:packages (optional, for consistency)
+5. Generate token
+6. Copy: ghp_xxxxx...
+```
+
+**Add to GitHub**:
+- Name: `RELEASE_TOKEN`
+- Value: `ghp_xxxxx...`
+- Repository access: `All repositories`
+
+**What it enables**:
+- ✅ Release creation automatically triggers production deployment workflow
+- ✅ Full end-to-end automation: merge to main → build images → create release → deploy to production
+- ✅ No manual workflow triggers needed
+
+**Note**: You can use the same token as `SUBMODULE_TOKEN` if it has `repo` scope, or create a separate token for clearer auditing.
 
 ---
 
