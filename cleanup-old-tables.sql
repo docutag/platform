@@ -3,6 +3,17 @@
 --
 -- WARNING: This will delete all data in these tables!
 -- Only run this in staging/development or if you're certain you want to lose all data.
+--
+-- Usage:
+-- Interactive (will prompt for password):
+--   psql -h <host> -U <user> -d <database> -f cleanup-old-tables.sql
+--
+-- With password from environment:
+--   PGPASSWORD=<password> psql -h <host> -U <user> -d <database> -f cleanup-old-tables.sql
+--
+-- Example for Kubernetes port-forward:
+--   kubectl port-forward svc/postgres 5432:5432
+--   PGPASSWORD=your_password psql -h localhost -U docutag -d docutag -f cleanup-old-tables.sql
 
 -- Drop indexes first to avoid dependency issues
 DROP INDEX IF EXISTS idx_tasks_enabled;
