@@ -44,14 +44,14 @@ spec:
         fi
         echo "  ✓ Metrics endpoint OK"
 
-        # Test API list sources endpoint (should work even with no data)
-        echo "→ Testing /api/sources endpoint..."
-        response=$(curl -s -o /dev/null -w "%{http_code}" $BASE_URL/api/sources)
+        # Test API search endpoint (should work even with no data)
+        echo "→ Testing /api/search endpoint..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/search?q=test")
         if [ "$response" != "200" ]; then
-          echo "✗ Sources API endpoint failed (HTTP $response)"
+          echo "✗ Search API endpoint failed (HTTP $response)"
           exit 1
         fi
-        echo "  ✓ Sources API endpoint OK"
+        echo "  ✓ Search API endpoint OK"
 
         echo ""
         echo "✓ All API endpoint tests passed"
