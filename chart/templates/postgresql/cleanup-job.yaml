@@ -57,14 +57,24 @@ data:
     DROP TABLE IF EXISTS tags CASCADE;
     DROP TABLE IF EXISTS analyses CASCADE;
 
-    -- Drop Controller tables (tags and scrape_jobs must be dropped before requests due to foreign keys)
+    -- Drop Controller tables (both unprefixed old AND prefixed new for complete cleanup)
+    -- Old unprefixed tables
     DROP TABLE IF EXISTS scrape_jobs CASCADE;
+    DROP TABLE IF EXISTS tags CASCADE;
     DROP TABLE IF EXISTS requests CASCADE;
 
-    -- Drop all old schema version tables
+    -- New prefixed tables (drop these too for clean slate)
+    DROP TABLE IF EXISTS controller_scrape_jobs CASCADE;
+    DROP TABLE IF EXISTS controller_tags CASCADE;
+    DROP TABLE IF EXISTS controller_requests CASCADE;
+
+    -- Drop ALL schema version tables (including controller's)
     DROP TABLE IF EXISTS schema_version CASCADE;
     DROP TABLE IF EXISTS schema_migrations CASCADE;
     DROP TABLE IF EXISTS controller_schema_version CASCADE;
+    DROP TABLE IF EXISTS scraper_schema_version CASCADE;
+    DROP TABLE IF EXISTS textanalyzer_schema_version CASCADE;
+    DROP TABLE IF EXISTS scheduler_schema_version CASCADE;
 ---
 apiVersion: batch/v1
 kind: Job
