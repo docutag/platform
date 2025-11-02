@@ -301,8 +301,15 @@ web:
 redis:
   enabled: true
   architecture: standalone
+  image:
+    repository: redis
+    tag: "7-alpine"
   auth:
     enabled: false
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
   master:
     persistence:
       enabled: true
@@ -318,14 +325,24 @@ externalRedis:
   port: 6379
   password: ""
 
-# PostgreSQL configuration (using Bitnami chart)
+# PostgreSQL configuration
 postgresql:
   enabled: true
   architecture: standalone
+  image:
+    repository: postgres
+    tag: "16-alpine"
   auth:
     database: docutag
     username: docutag
-    password: changeme
+    # password: ""  # Leave empty to auto-generate a secure random password
+                    # Set explicitly only for development/testing
+                    # On first install, a random 32-character password is generated
+                    # On upgrades, existing password is preserved via lookup
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: ""
   primary:
     persistence:
       enabled: true

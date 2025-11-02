@@ -46,6 +46,11 @@ Database Configuration:
 - Host: {{ include "docutag.fullname" . }}-postgresql
 - Port: 5432
 - Database: {{ .Values.postgresql.auth.database }}
+- Username: {{ .Values.postgresql.auth.username }}
+
+To retrieve the auto-generated PostgreSQL password:
+
+  kubectl get secret -n {{ .Release.Namespace }} {{ include "docutag.fullname" . }}-postgresql -o jsonpath="{.data.password}" | base64 -d
 
 {{- else if .Values.externalDatabase.enabled }}
 

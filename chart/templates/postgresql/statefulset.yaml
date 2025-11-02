@@ -25,9 +25,9 @@ spec:
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         env:
         - name: POSTGRES_DB
-          value: {{ .Values.postgresql.database }}
+          value: {{ .Values.postgresql.auth.database }}
         - name: POSTGRES_USER
-          value: {{ .Values.postgresql.username }}
+          value: {{ .Values.postgresql.auth.username }}
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
