@@ -31,8 +31,16 @@ controller:
 
 scraper:
   replicaCount: 2
-  persistence:
-    size: 100Gi
+  # S3 storage configuration (DigitalOcean Spaces)
+  storage:
+    s3:
+      endpoint: ""  # Empty for DigitalOcean Spaces (uses default endpoint)
+      region: sfo3  # DigitalOcean region
+      bucket: docutag-scraper-data
+      usePathStyle: false  # false for DO Spaces, true for MinIO
+      # Credentials provided via Pulumi/external secret management:
+      # accessKeyId: ""
+      # secretAccessKey: ""
   resources:
     requests:
       memory: "64Mi"

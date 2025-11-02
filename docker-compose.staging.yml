@@ -93,9 +93,16 @@ services:
       - OLLAMA_URL=http://ollama:11434
       - OLLAMA_MODEL=gemma3:12b
 
-      # Database & storage
+      # S3 storage configuration (MinIO for staging)
+      - S3_ENDPOINT=http://minio:9000
+      - S3_REGION=us-east-1
+      - S3_BUCKET=scraper-data
+      - S3_ACCESS_KEY_ID=minioadmin
+      - S3_SECRET_ACCESS_KEY=minioadmin
+      - S3_USE_PATH_STYLE=true
+
+      # Database
       - DATABASE_PATH=/app/data/scraper.db
-      - STORAGE_PATH=/app/storage
 
       # Observability
       - TEMPO_ENDPOINT=tempo:4317
@@ -106,7 +113,6 @@ services:
       - "9081:8080"  # Optional: expose if you need direct access for debugging
     volumes:
       - scraper-data:/app/data
-      - scraper-storage:/app/storage
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 30s
@@ -115,6 +121,8 @@ services:
       start_period: 15s
     restart: unless-stopped
     depends_on:
+      minio:
+        condition: service_healthy
       loki:
         condition: service_started
       tempo:
@@ -421,6 +429,52 @@ services:
     networks:
       - docutag-network
 
+  # MinIO - S3-compatible object storage for staging
+  minio:
+    image: minio/minio:latest
+    container_name: docutag-minio
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - docutag-network
+      - proxy
+
+  # MinIO Client - Create default bucket on startup
+  minio-init:
+    image: minio/mc:latest
+    container_name: docutag-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set minio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb minio/scraper-data --ignore-existing;
+      /usr/bin/mc anonymous set public minio/scraper-data;
+      exit 0;
+      "
+    networks:
+      - docutag-network
+
 # Networks and volumes for staging
 networks:
   docutag-network:
@@ -434,6 +488,8 @@ volumes:
   scraper-data:
     driver: local
   scraper-storage:
+    driver: local
+  minio-data:
     driver: local
   textanalyzer-data:
     driver: local

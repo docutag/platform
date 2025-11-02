@@ -55,6 +55,13 @@ func TestControllerIntegration(t *testing.T) {
 			"DB_USER=" + pgUser,
 			"DB_PASSWORD=" + pgPass,
 			"DB_NAME=scraper_db",
+			// S3 credentials (required for scraper)
+			"S3_ENDPOINT=",              // Empty for AWS S3
+			"S3_REGION=us-east-1",       // Default region
+			"S3_BUCKET=test-bucket",     // Test bucket
+			"S3_ACCESS_KEY_ID=test-key", // Test credentials
+			"S3_SECRET_ACCESS_KEY=test-secret",
+			"S3_USE_PATH_STYLE=false",
 		},
 		HealthCheck: scraperURL + "/health",
 	}

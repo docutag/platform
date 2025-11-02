@@ -63,7 +63,13 @@ services:
       - "9081:8080"
     environment:
       - PORT=8080
-      - STORAGE_BASE_PATH=/app/storage
+      # S3 storage configuration (MinIO for local development)
+      - S3_ENDPOINT=http://minio:9000
+      - S3_REGION=us-east-1
+      - S3_BUCKET=scraper-data
+      - S3_ACCESS_KEY_ID=minioadmin
+      - S3_SECRET_ACCESS_KEY=minioadmin
+      - S3_USE_PATH_STYLE=true
       - OLLAMA_URL=http://100.64.0.2:11434
       - OLLAMA_MODEL=gemma3:4b
       - TEMPO_ENDPOINT=tempo:4317
@@ -75,8 +81,6 @@ services:
       - DB_NAME=scraper_db
       # - OLLAMA_VISION_MODEL=gemma3:4b
       # - MAX_IMAGES=20  # Maximum number of images to download per scrape (0 = unlimited)
-    volumes:
-      - scraper-storage:/app/storage
     command: [
       "./scraper-api",
     ]
@@ -96,6 +100,8 @@ services:
       - docutag-network
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
       loki:
         condition: service_started
@@ -467,8 +473,50 @@ services:
     networks:
       - docutag-network
 
+  # MinIO - S3-compatible object storage for local development
+  minio:
+    image: minio/minio:latest
+    container_name: docutag-minio
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - docutag-network
+
+  # MinIO Client - Create default bucket on startup
+  minio-init:
+    image: minio/mc:latest
+    container_name: docutag-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set minio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb minio/scraper-data --ignore-existing;
+      /usr/bin/mc anonymous set public minio/scraper-data;
+      exit 0;
+      "
+    networks:
+      - docutag-network
+
 volumes:
   scraper-storage:
+    driver: local
+  minio-data:
     driver: local
   redis-data:
     driver: local
