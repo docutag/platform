@@ -339,6 +339,11 @@ postgresql:
                     # Set explicitly only for development/testing
                     # On first install, a random 32-character password is generated
                     # On upgrades, existing password is preserved via lookup
+  # Clean up old unprefixed database tables before upgrade
+  # Set to true when upgrading to the version with prefixed table names
+  # WARNING: This will delete all data in the old tables!
+  # This should be set to false after the initial migration is complete
+  cleanupOldTables: true
   persistence:
     enabled: true
     size: 20Gi

@@ -1,0 +1,115 @@
+{{- if .Values.postgresql.cleanupOldTables }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "docutag.fullname" . }}-db-cleanup-script
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  cleanup.sql: |
+    -- Cleanup script for dropping old unprefixed database tables
+    -- Runs automatically as a Helm pre-upgrade hook
+    --
+    -- WARNING: This will delete all data in these tables!
+
+    -- Drop indexes first to avoid dependency issues
+    DROP INDEX IF EXISTS idx_tasks_enabled;
+    DROP INDEX IF EXISTS idx_tasks_next_run_at;
+    DROP INDEX IF EXISTS idx_images_scrape_id;
+    DROP INDEX IF EXISTS idx_images_created_at;
+    DROP INDEX IF EXISTS idx_images_url;
+    DROP INDEX IF EXISTS idx_images_slug;
+    DROP INDEX IF EXISTS idx_scraper_scraped_data_url;
+    DROP INDEX IF EXISTS idx_scraper_scraped_data_created_at;
+    DROP INDEX IF EXISTS idx_scraper_scraped_data_slug;
+    DROP INDEX IF EXISTS idx_textanalyzer_analyses_created_at;
+    DROP INDEX IF EXISTS idx_textanalyzer_analyses_processing_stage;
+    DROP INDEX IF EXISTS idx_textanalyzer_analyses_enqueued_at;
+    DROP INDEX IF EXISTS idx_textanalyzer_tags_analysis_id;
+    DROP INDEX IF EXISTS idx_textanalyzer_tags_tag;
+    DROP INDEX IF EXISTS idx_textanalyzer_text_references_analysis_id;
+    DROP INDEX IF EXISTS idx_textanalyzer_text_references_text;
+    DROP INDEX IF EXISTS idx_textanalyzer_text_references_type;
+    DROP INDEX IF EXISTS idx_requests_created_at;
+    DROP INDEX IF EXISTS idx_requests_source_url;
+    DROP INDEX IF EXISTS idx_requests_scraper_uuid;
+    DROP INDEX IF EXISTS idx_requests_textanalyzer_uuid;
+    DROP INDEX IF EXISTS idx_tags_request_id;
+    DROP INDEX IF EXISTS idx_tags_tag;
+    DROP INDEX IF EXISTS idx_scrape_jobs_created_at;
+    DROP INDEX IF EXISTS idx_scrape_jobs_status;
+    DROP INDEX IF EXISTS idx_scrape_jobs_parent_job_id;
+    DROP INDEX IF EXISTS idx_scrape_jobs_result_request_id;
+
+    -- Drop Scheduler tables
+    DROP TABLE IF EXISTS tasks CASCADE;
+
+    -- Drop Scraper tables (images must be dropped before scraped_data due to foreign key)
+    DROP TABLE IF EXISTS images CASCADE;
+    DROP TABLE IF EXISTS scraped_data CASCADE;
+
+    -- Drop TextAnalyzer tables (tags and text_references must be dropped before analyses due to foreign keys)
+    DROP TABLE IF EXISTS text_references CASCADE;
+    DROP TABLE IF EXISTS tags CASCADE;
+    DROP TABLE IF EXISTS analyses CASCADE;
+
+    -- Drop Controller tables (both unprefixed old AND prefixed new for complete cleanup)
+    -- Old unprefixed tables
+    DROP TABLE IF EXISTS scrape_jobs CASCADE;
+    DROP TABLE IF EXISTS tags CASCADE;
+    DROP TABLE IF EXISTS requests CASCADE;
+
+    -- New prefixed tables (drop these too for clean slate)
+    DROP TABLE IF EXISTS controller_scrape_jobs CASCADE;
+    DROP TABLE IF EXISTS controller_tags CASCADE;
+    DROP TABLE IF EXISTS controller_requests CASCADE;
+
+    -- Drop ALL schema version tables (including controller's)
+    DROP TABLE IF EXISTS schema_version CASCADE;
+    DROP TABLE IF EXISTS schema_migrations CASCADE;
+    DROP TABLE IF EXISTS controller_schema_version CASCADE;
+    DROP TABLE IF EXISTS scraper_schema_version CASCADE;
+    DROP TABLE IF EXISTS textanalyzer_schema_version CASCADE;
+    DROP TABLE IF EXISTS scheduler_schema_version CASCADE;
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "docutag.fullname" . }}-db-cleanup
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: db-cleanup
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: cleanup
+        image: postgres:16-alpine
+        command:
+        - sh
+        - -c
+        - |
+          echo "Starting database cleanup..."
+          psql "postgresql://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ include "docutag.fullname" . }}-postgresql:5432/{{ .Values.postgresql.auth.database }}" -f /scripts/cleanup.sql
+          echo "Database cleanup completed successfully"
+        volumeMounts:
+        - name: cleanup-script
+          mountPath: /scripts
+          readOnly: true
+      volumes:
+      - name: cleanup-script
+        configMap:
+          name: {{ include "docutag.fullname" . }}-db-cleanup-script
+{{- end }}
