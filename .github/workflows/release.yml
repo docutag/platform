@@ -248,7 +248,9 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use PAT instead of GITHUB_TOKEN to trigger production deployment workflow
+          # GitHub's GITHUB_TOKEN cannot trigger other workflows (security limitation)
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
   # Summary job
   release-success:
