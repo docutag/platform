@@ -25,6 +25,10 @@ permissions:
   contents: read
   id-token: write  # For OIDC if using it
 
+concurrency:
+  group: infrastructure-deploy
+  cancel-in-progress: false
+
 jobs:
   infrastructure:
     runs-on: ubuntu-latest
