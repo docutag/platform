@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "docutag.fullname" . }}-scraper
+  name: {{ include "docutag.componentFullname" (dict "component" "scraper" "context" .) }}
   labels:
     {{- include "docutag.componentLabels" (dict "component" "scraper" "type" "backend" "context" .) | nindent 4 }}
 spec:
@@ -37,7 +37,7 @@ spec:
           protocol: TCP
         envFrom:
         - configMapRef:
-            name: {{ include "docutag.fullname" . }}-scraper
+            name: {{ include "docutag.componentFullname" (dict "component" "scraper" "context" .) }}
         env:
         # Database configuration
         - name: DB_HOST
@@ -68,12 +68,12 @@ spec:
         - name: S3_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
-              name: {{ include "docutag.fullname" . }}-scraper-s3
+              name: {{ include "docutag.componentFullname" (dict "component" "scraper" "context" .) }}-s3
               key: access-key-id
         - name: S3_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "docutag.fullname" . }}-scraper-s3
+              name: {{ include "docutag.componentFullname" (dict "component" "scraper" "context" .) }}-s3
               key: secret-access-key
         livenessProbe:
           {{- toYaml .Values.scraper.livenessProbe | nindent 12 }}
