@@ -1,0 +1,137 @@
+name: Validate Commit Messages
+
+# Validates that all commits in PRs follow Conventional Commits format
+# This ensures proper semantic versioning on release
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history to validate all commits in PR
+
+      - name: Validate commit messages
+        run: |
+          set -e
+
+          # Get list of commits in this PR
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          echo "Validating commits from $BASE_SHA to $HEAD_SHA"
+          echo ""
+
+          # Get all commit messages in the PR
+          COMMITS=$(git log --format=%H $BASE_SHA..$HEAD_SHA)
+
+          if [ -z "$COMMITS" ]; then
+            echo "No commits to validate"
+            exit 0
+          fi
+
+          FAILED=0
+          for commit in $COMMITS; do
+            MSG=$(git log --format=%B -n 1 $commit)
+            SHORT=$(git log --format=%h -n 1 $commit)
+            SUBJECT=$(git log --format=%s -n 1 $commit)
+
+            echo "Validating commit $SHORT: $SUBJECT"
+
+            if ./scripts/validate-commit-message.sh "$MSG"; then
+              echo ""
+            else
+              FAILED=$((FAILED + 1))
+              echo ""
+            fi
+          done
+
+          if [ $FAILED -gt 0 ]; then
+            echo "❌ $FAILED commit(s) failed validation"
+            echo ""
+            echo "Please update your commit messages to follow Conventional Commits format."
+            echo "See: https://www.conventionalcommits.org/"
+            exit 1
+          fi
+
+          echo "✅ All commits follow Conventional Commits format"
+
+      - name: Comment on PR (if validation fails)
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const message = `## ❌ Commit Message Validation Failed
+
+            One or more commits in this PR do not follow [Conventional Commits](https://www.conventionalcommits.org/) format.
+
+            ### Required Format
+
+            \`\`\`
+            <type>[optional scope][optional !]: <description>
+
+            [optional body]
+
+            [optional footer(s)]
+            \`\`\`
+
+            ### Valid Types
+
+            - \`feat:\` - New feature (MINOR version bump)
+            - \`fix:\` - Bug fix (PATCH version bump)
+            - \`docs:\` - Documentation changes (PATCH)
+            - \`style:\` - Code style changes (PATCH)
+            - \`refactor:\` - Code refactoring (PATCH)
+            - \`perf:\` - Performance improvements (PATCH)
+            - \`test:\` - Test changes (PATCH)
+            - \`build:\` - Build system changes (PATCH)
+            - \`ci:\` - CI/CD changes (PATCH)
+            - \`chore:\` - Other changes (PATCH)
+
+            ### Breaking Changes
+
+            For breaking changes (MAJOR version bump):
+            - Add \`!\` before colon: \`feat!: breaking change\`
+            - Or include \`BREAKING CHANGE:\` in commit body
+
+            ### Examples
+
+            \`\`\`
+            feat: add user authentication
+            fix: resolve database connection timeout
+            feat(api)!: change response format to JSON:API spec
+            docs: update API documentation
+            chore: update dependencies
+            \`\`\`
+
+            ### How to Fix
+
+            If you need to update commit messages:
+
+            \`\`\`bash
+            # Reword last commit
+            git commit --amend
+
+            # Reword multiple commits (interactive rebase)
+            git rebase -i HEAD~N  # N = number of commits to edit
+
+            # Force push (required after rewriting history)
+            git push --force-with-lease
+            \`\`\`
+
+            Check the workflow logs for specific commit validation errors.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
