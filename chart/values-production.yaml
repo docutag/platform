@@ -1,6 +1,6 @@
 # Production environment overrides
 global:
-  domain: docutag.io
+  domain: eng.in.docutag.app
   imageRegistry: ghcr.io/docutag
   # imageVersion: Set automatically by Pulumi deployment (e.g., "1.0.0")
   # Do not hardcode - version is managed via Pulumi config
