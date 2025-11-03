@@ -38,7 +38,7 @@ spec:
           protocol: TCP
         envFrom:
         - configMapRef:
-            name: {{ include "docutag.fullname" . }}-controller
+            name: {{ include "docutag.componentFullname" (dict "component" "controller" "context" .) }}
         env:
         - name: DB_HOST
           value: {{ include "docutag.postgresqlHost" . | quote }}
