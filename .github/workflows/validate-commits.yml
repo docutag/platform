@@ -18,6 +18,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetch all history to validate all commits in PR
+          ref: ${{ github.event.pull_request.head.sha }}  # Checkout PR branch to get scripts
 
       - name: Validate commit messages
         run: |
