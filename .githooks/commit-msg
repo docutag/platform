@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Git commit-msg hook to validate Conventional Commits format
+# This hook is triggered when you run 'git commit'
+#
+# To install: git config core.hooksPath .githooks
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Run validation script
+if ! ./scripts/validate-commit-message.sh "$COMMIT_MSG"; then
+  echo ""
+  echo "💡 Tip: You can bypass this check with 'git commit --no-verify'"
+  echo "   (but your PR will still be blocked in CI)"
+  exit 1
+fi
+
+exit 0
