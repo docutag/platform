@@ -60,7 +60,7 @@ spec:
         - name: PUBLIC_URL_BASE
           value: "https://{{ include "docutag.domain" . }}"
         - name: TEMPO_ENDPOINT
-          value: "{{ include "docutag.fullname" . }}-tempo:4317"
+          value: "{{ include "docutag.componentFullname" (dict "component" "tempo" "context" .) }}:4317"
         livenessProbe:
           {{- toYaml .Values.controller.livenessProbe | nindent 12 }}
         readinessProbe:

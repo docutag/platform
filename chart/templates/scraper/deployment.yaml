@@ -55,7 +55,7 @@ spec:
               key: {{ if .Values.postgresql.enabled }}password{{ else }}postgres-password{{ end }}
         # Observability
         - name: TEMPO_ENDPOINT
-          value: "{{ include "docutag.fullname" . }}-tempo:4317"
+          value: "{{ include "docutag.componentFullname" (dict "component" "tempo" "context" .) }}:4317"
         # S3 storage configuration (only storage backend supported)
         - name: S3_ENDPOINT
           value: {{ .Values.scraper.storage.s3.endpoint | quote }}

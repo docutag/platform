@@ -2,7 +2,7 @@
 apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
-  name: {{ include "docutag.fullname" . }}-scheduler
+  name: {{ include "docutag.componentFullname" (dict "component" "scheduler" "context" .) }}
   labels:
     {{- include "docutag.labels" . | nindent 4 }}
     app.kubernetes.io/component: scheduler
@@ -10,7 +10,7 @@ spec:
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "docutag.fullname" . }}-scheduler
+    name: {{ include "docutag.componentFullname" (dict "component" "scheduler" "context" .) }}
 
   service:
     port: {{ .Values.scheduler.service.port }}

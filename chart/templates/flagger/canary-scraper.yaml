@@ -2,7 +2,7 @@
 apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
-  name: {{ include "docutag.fullname" . }}-scraper
+  name: {{ include "docutag.componentFullname" (dict "component" "scraper" "context" .) }}
   labels:
     {{- include "docutag.labels" . | nindent 4 }}
     app.kubernetes.io/component: scraper
@@ -10,7 +10,7 @@ spec:
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "docutag.fullname" . }}-scraper
+    name: {{ include "docutag.componentFullname" (dict "component" "scraper" "context" .) }}
 
   service:
     port: {{ .Values.scraper.service.port }}

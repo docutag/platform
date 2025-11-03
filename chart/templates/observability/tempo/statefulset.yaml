@@ -52,7 +52,7 @@ spec:
       volumes:
       - name: config
         configMap:
-          name: {{ include "docutag.fullname" . }}-tempo
+          name: {{ include "docutag.componentFullname" (dict "component" "tempo" "context" .) }}
   volumeClaimTemplates:
   - metadata:
       name: data

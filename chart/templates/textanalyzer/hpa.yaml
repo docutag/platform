@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "docutag.fullname" . }}-textanalyzer
+  name: {{ include "docutag.componentFullname" (dict "component" "textanalyzer" "context" .) }}
   labels:
     {{- include "docutag.componentLabels" (dict "component" "textanalyzer" "type" "backend" "context" .) | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "docutag.fullname" . }}-textanalyzer
+    name: {{ include "docutag.componentFullname" (dict "component" "textanalyzer" "context" .) }}
   minReplicas: {{ .Values.textanalyzer.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.textanalyzer.autoscaling.maxReplicas }}
   metrics:
