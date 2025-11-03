@@ -107,7 +107,7 @@ redis:
     tag: 8.2.2-alpine
   persistence:
     enabled: true
-    size: 20Gi
+    size: 5Gi  # Reduced from 20Gi - ephemeral cache data, currently using ~2MB
     storageClass: do-block-storage
   resources:
     requests:
@@ -131,7 +131,7 @@ postgresql:
 
   persistence:
     enabled: true
-    size: 100Gi
+    size: 20Gi  # Reduced from 100Gi - currently using 51MB, allows 4x 12-month projection
     storageClass: do-block-storage
 
   resources:
@@ -155,7 +155,7 @@ observability:
   enabled: true
   prometheus:
     persistence:
-      size: 100Gi
+      size: 10Gi  # Reduced from 100Gi - 90d retention, currently using 1.3MB, allows 5x projection
     retention: 90d
     resources:
       requests:
@@ -166,7 +166,7 @@ observability:
         cpu: "250m"
   grafana:
     persistence:
-      size: 20Gi
+      size: 5Gi  # Reduced from 20Gi - currently using 40MB, allows 25x growth
     env:
       authAnonymousEnabled: false
       authDisableLoginForm: false
@@ -180,7 +180,7 @@ observability:
         cpu: "400m"
   loki:
     persistence:
-      size: 100Gi
+      size: 10Gi  # Reduced from 100Gi - currently using 136KB, allows 3x 12-month projection
     resources:
       requests:
         memory: "512Mi"
@@ -190,7 +190,7 @@ observability:
         cpu: "400m"
   tempo:
     persistence:
-      size: 50Gi
+      size: 5Gi  # Reduced from 50Gi - allows 5x 12-month projection for trace data
     resources:
       requests:
         memory: "512Mi"
