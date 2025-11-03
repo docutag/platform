@@ -103,7 +103,16 @@ jobs:
       - name: Rollback on test failure
         if: steps.helm_tests.outcome == 'failure'
         run: |
-          echo "❌ Helm tests failed - rolling back to previous version"
+          echo "❌ Helm tests failed"
+
+          # Check if Flagger is managing this deployment
+          if kubectl get canary -n docutag &>/dev/null && kubectl get canary -n docutag | grep -q docutag; then
+            echo "⚠️ Flagger is enabled - skipping automatic rollback"
+            echo "Flagger will handle rollback automatically based on metrics"
+            exit 1
+          fi
+
+          echo "Rolling back to previous version (Flagger disabled)"
 
           # Get previous revision
           PREVIOUS_REVISION=$(helm history docutag -n docutag --max 2 -o json | jq -r '.[1].revision // 1')
