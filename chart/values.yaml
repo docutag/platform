@@ -46,9 +46,13 @@ imageRegistry:
 
 # Cleanup configuration
 cleanup:
-  # Enable pre-upgrade cleanup of orphaned resources
-  # This removes old resources that used non-versioned naming
+  # Enable automatic cleanup of orphaned resources
   enabled: true
+
+  # When to run cleanup:
+  # - "pre-upgrade": Before deployment (deletes old resources, pods kept by k8s)
+  # - "post-upgrade": After deployment (safer, but leaves old resources during rollout)
+  timing: "post-upgrade"
 
 # Controller service configuration
 controller:

@@ -7,8 +7,8 @@ metadata:
     {{- include "docutag.labels" . | nindent 4 }}
     app.kubernetes.io/component: cleanup
   annotations:
-    "helm.sh/hook": pre-upgrade
-    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook": {{ .Values.cleanup.timing | default "post-upgrade" }}
+    "helm.sh/hook-weight": {{ if eq (.Values.cleanup.timing | default "post-upgrade") "pre-upgrade" }}"-5"{{ else }}"5"{{ end }}
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   backoffLimit: 3
