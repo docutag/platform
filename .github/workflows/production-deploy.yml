@@ -18,7 +18,7 @@ permissions:
   packages: read
 
 concurrency:
-  group: production-deploy
+  group: production-release-deploy
   cancel-in-progress: false
 
 jobs:

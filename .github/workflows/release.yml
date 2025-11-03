@@ -10,6 +10,10 @@ permissions:
   contents: write  # For creating tags and releases
   packages: write  # For pushing to GHCR
 
+concurrency:
+  group: production-release-deploy
+  cancel-in-progress: false
+
 jobs:
   # Test version calculation logic
   test-version-calculation:
