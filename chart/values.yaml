@@ -44,6 +44,12 @@ imageRegistry:
   username: ""  # GitHub username
   password: ""  # GitHub PAT or GITHUB_TOKEN
 
+# Cleanup configuration
+cleanup:
+  # Enable pre-upgrade cleanup of orphaned resources
+  # This removes old resources that used non-versioned naming
+  enabled: true
+
 # Controller service configuration
 controller:
   enabled: true

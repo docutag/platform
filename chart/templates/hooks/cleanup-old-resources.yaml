@@ -1,0 +1,94 @@
+{{- if .Values.cleanup.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "docutag.fullname" . }}-cleanup-old-resources
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cleanup
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      name: {{ include "docutag.fullname" . }}-cleanup
+      labels:
+        {{- include "docutag.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: cleanup
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "docutag.serviceAccountName" . }}
+      containers:
+      - name: cleanup
+        image: bitnami/kubectl:latest
+        command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo "Cleaning up orphaned resources from previous deployments..."
+
+            # Function to safely delete resource if it exists
+            safe_delete() {
+              resource_type=$1
+              resource_name=$2
+              if kubectl get $resource_type $resource_name -n {{ .Release.Namespace }} 2>/dev/null; then
+                echo "Deleting $resource_type/$resource_name..."
+                kubectl delete $resource_type $resource_name -n {{ .Release.Namespace }} --ignore-not-found=true
+              else
+                echo "Resource $resource_type/$resource_name not found (already cleaned up)"
+              fi
+            }
+
+            # Clean up old ConfigMaps (without version in name)
+            echo "→ Cleaning up old ConfigMaps..."
+            safe_delete configmap {{ include "docutag.fullname" . }}-controller
+            safe_delete configmap {{ include "docutag.fullname" . }}-scheduler
+            safe_delete configmap {{ include "docutag.fullname" . }}-scraper
+            safe_delete configmap {{ include "docutag.fullname" . }}-textanalyzer
+            safe_delete configmap {{ include "docutag.fullname" . }}-prometheus
+            safe_delete configmap {{ include "docutag.fullname" . }}-loki
+            safe_delete configmap {{ include "docutag.fullname" . }}-tempo
+
+            # Clean up old Services (without version in name)
+            echo "→ Cleaning up old Services..."
+            safe_delete service {{ include "docutag.fullname" . }}-tempo
+            safe_delete service {{ include "docutag.fullname" . }}-prometheus
+            safe_delete service {{ include "docutag.fullname" . }}-loki
+
+            # Clean up old Deployments (without version in name)
+            echo "→ Cleaning up old Deployments..."
+            safe_delete deployment {{ include "docutag.fullname" . }}-controller
+            safe_delete deployment {{ include "docutag.fullname" . }}-scheduler
+            safe_delete deployment {{ include "docutag.fullname" . }}-scraper
+            safe_delete deployment {{ include "docutag.fullname" . }}-textanalyzer
+            safe_delete deployment {{ include "docutag.fullname" . }}-web
+            safe_delete deployment {{ include "docutag.fullname" . }}-asynqmon
+            safe_delete deployment {{ include "docutag.fullname" . }}-grafana
+
+            # Clean up old StatefulSets (without version in name)
+            echo "→ Cleaning up old StatefulSets..."
+            safe_delete statefulset {{ include "docutag.fullname" . }}-prometheus
+            safe_delete statefulset {{ include "docutag.fullname" . }}-loki
+            safe_delete statefulset {{ include "docutag.fullname" . }}-tempo
+
+            # Clean up old HPAs (without version in name)
+            echo "→ Cleaning up old HPAs..."
+            safe_delete hpa {{ include "docutag.fullname" . }}-controller
+            safe_delete hpa {{ include "docutag.fullname" . }}-textanalyzer
+
+            # Clean up old Canaries (without version in name)
+            {{- if .Values.flagger.enabled }}
+            echo "→ Cleaning up old Flagger Canaries..."
+            safe_delete canary {{ include "docutag.fullname" . }}-controller
+            safe_delete canary {{ include "docutag.fullname" . }}-scheduler
+            safe_delete canary {{ include "docutag.fullname" . }}-scraper
+            safe_delete canary {{ include "docutag.fullname" . }}-textanalyzer
+            {{- end }}
+
+            echo ""
+            echo "✓ Cleanup completed successfully"
+{{- end }}
