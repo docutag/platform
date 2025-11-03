@@ -18,7 +18,7 @@ permissions:
   packages: read
 
 concurrency:
-  group: production-deploy
+  group: production-release-deploy
   cancel-in-progress: false
 
 jobs:
@@ -78,7 +78,11 @@ jobs:
             --wait \
             --timeout 10m \
             --values ./chart/values-production.yaml \
-            --set global.imageVersion="$VERSION"
+            --set global.imageVersion="$VERSION" \
+            --set imageRegistry.username="${{ github.actor }}" \
+            --set imageRegistry.password="${{ secrets.GH_TOKEN }}" \
+            --set scraper.storage.s3.accessKeyId="${{ secrets.SPACES_ACCESS_KEY_ID }}" \
+            --set scraper.storage.s3.secretAccessKey="${{ secrets.SPACES_SECRET_ACCESS_KEY }}"
 
       - name: Verify deployment
         run: |
@@ -90,9 +94,40 @@ jobs:
           helm list -n docutag
 
       - name: Run Helm tests
+        id: helm_tests
         run: |
           echo "Running post-deployment tests..."
           helm test docutag -n docutag --logs
+        continue-on-error: true
+
+      - name: Handle test failure
+        if: steps.helm_tests.outcome == 'failure'
+        run: |
+          echo "❌ Helm tests failed"
+
+          # Check if Flagger is managing this deployment
+          if kubectl get canary -n docutag &>/dev/null && kubectl get canary -n docutag | grep -q docutag; then
+            echo "⚠️ Flagger is enabled - skipping automatic rollback"
+            echo "Flagger will handle rollback automatically based on metrics"
+            echo "::error::Helm tests failed - Flagger will handle rollback"
+            exit 1
+          fi
+
+          echo "Rolling back to previous version (Flagger disabled)"
+
+          # Get previous revision
+          PREVIOUS_REVISION=$(helm history docutag -n docutag --max 2 -o json | jq -r '.[1].revision // 1')
+          echo "Rolling back to revision $PREVIOUS_REVISION"
+
+          # Rollback to previous revision
+          if ! helm rollback docutag $PREVIOUS_REVISION -n docutag --wait --timeout 10m; then
+            echo "::error::Rollback failed"
+            exit 1
+          fi
+
+          echo "✓ Rollback completed successfully"
+          echo "::error::Deployment rolled back due to test failures"
+          exit 1
 
       - name: Monitor Flagger canary (if enabled)
         run: |

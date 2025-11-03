@@ -24,6 +24,7 @@ spec:
         BASE_URL="http://{{ include "docutag.fullname" . }}-controller:8080"
 
         # Wait for service to be ready
+        echo "Waiting for controller service to be ready..."
         sleep 5
 
         # Test health endpoint
@@ -44,14 +45,28 @@ spec:
         fi
         echo "  ✓ Metrics endpoint OK"
 
-        # Test API search endpoint (should work even with no data)
-        echo "→ Testing /api/search endpoint..."
-        response=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/search?q=test")
-        if [ "$response" != "200" ]; then
-          echo "✗ Search API endpoint failed (HTTP $response)"
-          exit 1
-        fi
-        echo "  ✓ Search API endpoint OK"
+        # Test API requests endpoint with retry logic (wait for migrations)
+        echo "→ Testing /api/requests endpoint..."
+        MAX_RETRIES=12
+        RETRY_DELAY=5
+        attempt=1
+
+        while [ $attempt -le $MAX_RETRIES ]; do
+          response=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/requests")
+
+          if [ "$response" = "200" ]; then
+            echo "  ✓ Requests API endpoint OK"
+            break
+          elif [ $attempt -eq $MAX_RETRIES ]; then
+            echo "✗ Requests API endpoint failed after $MAX_RETRIES attempts (HTTP $response)"
+            echo "  This likely means database migrations haven't completed yet"
+            exit 1
+          else
+            echo "  Attempt $attempt/$MAX_RETRIES failed (HTTP $response), retrying in ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
+            attempt=$((attempt + 1))
+          fi
+        done
 
         echo ""
         echo "✓ All API endpoint tests passed"

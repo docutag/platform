@@ -1,12 +1,11 @@
 {{- if .Values.scraper.enabled }}
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: {{ include "docutag.fullname" . }}-scraper
   labels:
     {{- include "docutag.componentLabels" (dict "component" "scraper" "type" "backend" "context" .) | nindent 4 }}
 spec:
-  serviceName: {{ include "docutag.fullname" . }}-scraper
   replicas: {{ .Values.scraper.replicaCount }}
   selector:
     matchLabels:
@@ -15,6 +14,7 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/scraper/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/scraper/s3-secret.yaml") . | sha256sum }}
       labels:
         {{- include "docutag.componentSelectorLabels" (dict "component" "scraper" "context" .) | nindent 8 }}
     spec:
@@ -39,6 +39,7 @@ spec:
         - configMapRef:
             name: {{ include "docutag.fullname" . }}-scraper
         env:
+        # Database configuration
         - name: DB_HOST
           value: {{ include "docutag.postgresqlHost" . | quote }}
         - name: DB_PORT
@@ -52,19 +53,42 @@ spec:
             secretKeyRef:
               name: {{ include "docutag.postgresqlSecretName" . }}
               key: {{ if .Values.postgresql.enabled }}password{{ else }}postgres-password{{ end }}
+        # Observability
         - name: TEMPO_ENDPOINT
           value: "{{ include "docutag.fullname" . }}-tempo:4317"
+        # S3 storage configuration (only storage backend supported)
+        - name: S3_ENDPOINT
+          value: {{ .Values.scraper.storage.s3.endpoint | quote }}
+        - name: S3_REGION
+          value: {{ .Values.scraper.storage.s3.region | quote }}
+        - name: S3_BUCKET
+          value: {{ .Values.scraper.storage.s3.bucket | quote }}
+        - name: S3_USE_PATH_STYLE
+          value: {{ .Values.scraper.storage.s3.usePathStyle | quote }}
+        - name: S3_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "docutag.fullname" . }}-scraper-s3
+              key: access-key-id
+        - name: S3_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "docutag.fullname" . }}-scraper-s3
+              key: secret-access-key
         livenessProbe:
           {{- toYaml .Values.scraper.livenessProbe | nindent 12 }}
         readinessProbe:
           {{- toYaml .Values.scraper.readinessProbe | nindent 12 }}
         resources:
           {{- toYaml .Values.scraper.resources | nindent 12 }}
-        {{- if .Values.scraper.persistence.enabled }}
+        # Optional: Add temp storage for processing
         volumeMounts:
-        - name: storage
-          mountPath: {{ .Values.scraper.env.storagePath }}
-        {{- end }}
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 5Gi
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -77,18 +101,4 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-  {{- if .Values.scraper.persistence.enabled }}
-  volumeClaimTemplates:
-  - metadata:
-      name: storage
-    spec:
-      accessModes:
-      - {{ .Values.scraper.persistence.accessMode }}
-      {{- if or .Values.scraper.persistence.storageClass .Values.global.storageClass }}
-      storageClassName: {{ .Values.scraper.persistence.storageClass | default .Values.global.storageClass }}
-      {{- end }}
-      resources:
-        requests:
-          storage: {{ .Values.scraper.persistence.size }}
-  {{- end }}
 {{- end }}

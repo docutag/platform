@@ -1,0 +1,28 @@
+{{- if and .Values.ingress.enabled .Values.ingress.tls.enabled .Values.ingress.tls.certManager.enabled }}
+---
+# Certificate resource for cert-manager to provision SSL certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.ingress.tls.secretName }}
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+spec:
+  secretName: {{ .Values.ingress.tls.secretName }}
+  issuerRef:
+    name: {{ .Values.ingress.tls.certManager.clusterIssuer }}
+    kind: ClusterIssuer
+  dnsNames:
+    {{- if .Values.ingress.routes.web.enabled }}
+    - {{ tpl .Values.ingress.routes.web.host . }}
+    {{- end }}
+    {{- if .Values.ingress.routes.api.enabled }}
+    - {{ tpl .Values.ingress.routes.api.host . }}
+    {{- end }}
+    {{- if and .Values.ingress.routes.grafana.enabled .Values.observability.grafana.enabled }}
+    - {{ tpl .Values.ingress.routes.grafana.host . }}
+    {{- end }}
+    {{- if and .Values.ingress.routes.asynqmon.enabled .Values.asynqmon.enabled }}
+    - {{ tpl .Values.ingress.routes.asynqmon.host . }}
+    {{- end }}
+{{- end }}
