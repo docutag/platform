@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "docutag.fullname" . }}-asynqmon
+  name: {{ include "docutag.componentFullname" (dict "component" "asynqmon" "context" .) }}
   labels:
     {{- include "docutag.componentLabels" (dict "component" "asynqmon" "type" "monitoring" "context" .) | nindent 4 }}
 spec:

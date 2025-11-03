@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "docutag.fullname" . }}-textanalyzer
+  name: {{ include "docutag.componentFullname" (dict "component" "textanalyzer" "context" .) }}
   labels:
     {{- include "docutag.componentLabels" (dict "component" "textanalyzer" "type" "backend" "context" .) | nindent 4 }}
 spec:
@@ -38,7 +38,7 @@ spec:
           protocol: TCP
         envFrom:
         - configMapRef:
-            name: {{ include "docutag.fullname" . }}-textanalyzer
+            name: {{ include "docutag.componentFullname" (dict "component" "textanalyzer" "context" .) }}
         env:
         - name: DB_HOST
           value: {{ include "docutag.postgresqlHost" . | quote }}

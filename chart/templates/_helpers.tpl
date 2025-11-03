@@ -49,6 +49,22 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Component fullname with version
+Usage: {{ include "docutag.componentFullname" (dict "component" "controller" "context" .) }}
+Produces: docutag-v1.1.43-controller
+*/}}
+{{- define "docutag.componentFullname" -}}
+{{- $base := include "docutag.fullname" .context -}}
+{{- $version := "" -}}
+{{- if .context.Values.global }}
+  {{- if .context.Values.global.imageVersion }}
+    {{- $version = printf "-v%s" .context.Values.global.imageVersion -}}
+  {{- end -}}
+{{- end -}}
+{{- printf "%s%s-%s" $base $version .component | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Component-specific labels
 Usage: {{ include "docutag.componentLabels" (dict "component" "controller" "context" .) }}
 */}}
