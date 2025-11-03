@@ -100,7 +100,7 @@ jobs:
           helm test docutag -n docutag --logs
         continue-on-error: true
 
-      - name: Rollback on test failure
+      - name: Handle test failure
         if: steps.helm_tests.outcome == 'failure'
         run: |
           echo "❌ Helm tests failed"
@@ -109,6 +109,7 @@ jobs:
           if kubectl get canary -n docutag &>/dev/null && kubectl get canary -n docutag | grep -q docutag; then
             echo "⚠️ Flagger is enabled - skipping automatic rollback"
             echo "Flagger will handle rollback automatically based on metrics"
+            echo "::error::Helm tests failed - Flagger will handle rollback"
             exit 1
           fi
 
@@ -119,14 +120,14 @@ jobs:
           echo "Rolling back to revision $PREVIOUS_REVISION"
 
           # Rollback to previous revision
-          helm rollback docutag $PREVIOUS_REVISION -n docutag --wait --timeout 10m
+          if ! helm rollback docutag $PREVIOUS_REVISION -n docutag --wait --timeout 10m; then
+            echo "::error::Rollback failed"
+            exit 1
+          fi
 
-          echo "✓ Rollback completed"
+          echo "✓ Rollback completed successfully"
+          echo "::error::Deployment rolled back due to test failures"
           exit 1
-
-      - name: Mark tests as required
-        if: steps.helm_tests.outcome == 'failure'
-        run: exit 1
 
       - name: Monitor Flagger canary (if enabled)
         run: |
