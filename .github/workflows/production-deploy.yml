@@ -94,9 +94,30 @@ jobs:
           helm list -n docutag
 
       - name: Run Helm tests
+        id: helm_tests
         run: |
           echo "Running post-deployment tests..."
           helm test docutag -n docutag --logs
+        continue-on-error: true
+
+      - name: Rollback on test failure
+        if: steps.helm_tests.outcome == 'failure'
+        run: |
+          echo "❌ Helm tests failed - rolling back to previous version"
+
+          # Get previous revision
+          PREVIOUS_REVISION=$(helm history docutag -n docutag --max 2 -o json | jq -r '.[1].revision // 1')
+          echo "Rolling back to revision $PREVIOUS_REVISION"
+
+          # Rollback to previous revision
+          helm rollback docutag $PREVIOUS_REVISION -n docutag --wait --timeout 10m
+
+          echo "✓ Rollback completed"
+          exit 1
+
+      - name: Mark tests as required
+        if: steps.helm_tests.outcome == 'failure'
+        run: exit 1
 
       - name: Monitor Flagger canary (if enabled)
         run: |
