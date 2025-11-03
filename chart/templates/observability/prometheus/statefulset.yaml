@@ -2,12 +2,12 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "docutag.fullname" . }}-prometheus
+  name: {{ include "docutag.componentFullname" (dict "component" "prometheus" "context" .) }}
   labels:
     {{- include "docutag.labels" . | nindent 4 }}
     app.kubernetes.io/component: prometheus
 spec:
-  serviceName: {{ include "docutag.fullname" . }}-prometheus
+  serviceName: {{ include "docutag.componentFullname" (dict "component" "prometheus" "context" .) }}
   replicas: 1
   selector:
     matchLabels:
@@ -59,7 +59,7 @@ spec:
       volumes:
       - name: config
         configMap:
-          name: {{ include "docutag.fullname" . }}-prometheus
+          name: {{ include "docutag.componentFullname" (dict "component" "prometheus" "context" .) }}
   volumeClaimTemplates:
   - metadata:
       name: data

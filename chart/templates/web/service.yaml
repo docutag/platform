@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "docutag.fullname" . }}-web
+  name: {{ include "docutag.componentFullname" (dict "component" "web" "context" .) }}
   labels:
     {{- include "docutag.componentLabels" (dict "component" "web" "type" "frontend" "context" .) | nindent 4 }}
 spec:

@@ -2,12 +2,12 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "docutag.fullname" . }}-loki
+  name: {{ include "docutag.componentFullname" (dict "component" "loki" "context" .) }}
   labels:
     {{- include "docutag.labels" . | nindent 4 }}
     app.kubernetes.io/component: loki
 spec:
-  serviceName: {{ include "docutag.fullname" . }}-loki
+  serviceName: {{ include "docutag.componentFullname" (dict "component" "loki" "context" .) }}
   replicas: 1
   selector:
     matchLabels:
@@ -54,7 +54,7 @@ spec:
       volumes:
       - name: config
         configMap:
-          name: {{ include "docutag.fullname" . }}-loki
+          name: {{ include "docutag.componentFullname" (dict "component" "loki" "context" .) }}
   volumeClaimTemplates:
   - metadata:
       name: data

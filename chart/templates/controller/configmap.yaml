@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "docutag.fullname" . }}-controller
+  name: {{ include "docutag.componentFullname" (dict "component" "controller" "context" .) }}
   labels:
     {{- include "docutag.componentLabels" (dict "component" "controller" "type" "backend" "context" .) | nindent 4 }}
 data:
