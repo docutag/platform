@@ -196,7 +196,10 @@ ingress:
   enabled: true
   tls:
     enabled: true
-    certResolver: letsencrypt
+    certResolver: ""  # Disabled - using cert-manager instead
+    certManager:
+      enabled: true
+      clusterIssuer: letsencrypt-prod
 
 # Progressive delivery with Flagger
 # NOTE: Disabled until infrastructure workflow deploys Flagger CRDs

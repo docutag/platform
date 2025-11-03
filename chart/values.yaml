@@ -548,8 +548,13 @@ ingress:
   # TLS configuration
   tls:
     enabled: true
-    certResolver: letsencrypt
+    # Legacy Traefik certResolver (deprecated - use certManager instead)
+    certResolver: ""
     secretName: docutag-tls
+    # cert-manager configuration (recommended)
+    certManager:
+      enabled: true
+      clusterIssuer: letsencrypt-prod
 
   # Annotations for Traefik
   annotations: {}
