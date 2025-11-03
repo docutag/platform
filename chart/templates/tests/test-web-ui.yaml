@@ -25,7 +25,7 @@ spec:
         sleep 5
 
         # Test web UI endpoint (should return HTML)
-        response=$(curl -s -o /dev/null -w "%{http_code}" http://{{ include "docutag.fullname" . }}-web:8080/)
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://{{ include "docutag.componentFullname" (dict "component" "web" "context" .) }}:8080/)
 
         if [ "$response" = "200" ]; then
           echo "✓ Web UI health check passed (HTTP $response)"

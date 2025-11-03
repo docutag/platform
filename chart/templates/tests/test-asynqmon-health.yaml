@@ -21,7 +21,7 @@ spec:
         set -e
         echo "Testing asynqmon (queue monitoring) UI..."
 
-        BASE_URL="http://{{ include "docutag.fullname" . }}-asynqmon:8080"
+        BASE_URL="http://{{ include "docutag.componentFullname" (dict "component" "asynqmon" "context" .) }}:8080"
 
         # Wait for service to be ready
         sleep 5

@@ -44,6 +44,16 @@ imageRegistry:
   username: ""  # GitHub username
   password: ""  # GitHub PAT or GITHUB_TOKEN
 
+# Cleanup configuration
+cleanup:
+  # Enable automatic cleanup of orphaned resources
+  enabled: true
+
+  # When to run cleanup:
+  # - "pre-upgrade": Before deployment (deletes old resources, pods kept by k8s)
+  # - "post-upgrade": After deployment (safer, but leaves old resources during rollout)
+  timing: "post-upgrade"
+
 # Controller service configuration
 controller:
   enabled: true

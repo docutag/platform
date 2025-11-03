@@ -1,0 +1,150 @@
+{{- if .Values.cleanup.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "docutag.fullname" . }}-cleanup-old-resources
+  labels:
+    {{- include "docutag.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cleanup
+  annotations:
+    "helm.sh/hook": {{ .Values.cleanup.timing | default "post-upgrade" }}
+    "helm.sh/hook-weight": {{ if eq (.Values.cleanup.timing | default "post-upgrade") "pre-upgrade" }}"-5"{{ else }}"5"{{ end }}
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      name: {{ include "docutag.fullname" . }}-cleanup
+      labels:
+        {{- include "docutag.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: cleanup
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "docutag.serviceAccountName" . }}
+      containers:
+      - name: cleanup
+        image: bitnami/kubectl:latest
+        command:
+          - sh
+          - -c
+          - |
+            set -e
+            echo "Cleaning up orphaned resources from previous deployments..."
+            echo "Current version: {{ .Values.global.imageVersion }}"
+
+            # Current version with dashes (e.g., v1-3-1)
+            CURRENT_VERSION="{{ .Values.global.imageVersion | replace "." "-" }}"
+            CURRENT_VERSION_PREFIX="v${CURRENT_VERSION}"
+
+            echo "Current version prefix: ${CURRENT_VERSION_PREFIX}"
+            echo ""
+
+            # Function to safely delete resource if it exists
+            safe_delete() {
+              resource_type=$1
+              resource_name=$2
+              if kubectl get $resource_type $resource_name -n {{ .Release.Namespace }} 2>/dev/null; then
+                echo "  Deleting $resource_type/$resource_name..."
+                kubectl delete $resource_type $resource_name -n {{ .Release.Namespace }} --ignore-not-found=true
+              fi
+            }
+
+            # Function to delete old versioned resources (not matching current version)
+            cleanup_old_versions() {
+              resource_type=$1
+              component=$2
+              base_name="{{ include "docutag.fullname" . }}"
+
+              echo "→ Checking for old ${resource_type}/${component} versions..."
+
+              # Get all resources of this type with our labels
+              resources=$(kubectl get $resource_type -n {{ .Release.Namespace }} \
+                -l app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=${component} \
+                -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+
+              if [ -z "$resources" ]; then
+                echo "  No ${resource_type}/${component} resources found"
+                return
+              fi
+
+              for resource in $resources; do
+                # Skip if it matches the current version
+                if echo "$resource" | grep -q "${CURRENT_VERSION_PREFIX}"; then
+                  echo "  Keeping current version: $resource"
+                  continue
+                fi
+
+                # Delete old versioned resources (contains 'v' followed by numbers and dashes)
+                if echo "$resource" | grep -qE "v[0-9]+-[0-9]+-[0-9]+"; then
+                  echo "  Deleting old version: $resource"
+                  kubectl delete $resource_type $resource -n {{ .Release.Namespace }} --ignore-not-found=true
+                # Also delete non-versioned resources (old naming pattern)
+                elif echo "$resource" | grep -qE "^${base_name}-${component}$"; then
+                  echo "  Deleting non-versioned resource: $resource"
+                  kubectl delete $resource_type $resource -n {{ .Release.Namespace }} --ignore-not-found=true
+                fi
+              done
+            }
+
+            # Clean up old ConfigMaps (all versions except current)
+            echo "=== Cleaning up ConfigMaps ==="
+            cleanup_old_versions configmap controller
+            cleanup_old_versions configmap scheduler
+            cleanup_old_versions configmap scraper
+            cleanup_old_versions configmap textanalyzer
+            cleanup_old_versions configmap prometheus
+            cleanup_old_versions configmap loki
+            cleanup_old_versions configmap tempo
+            echo ""
+
+            # Clean up old Services (all versions except current)
+            echo "=== Cleaning up Services ==="
+            cleanup_old_versions service controller
+            cleanup_old_versions service scheduler
+            cleanup_old_versions service scraper
+            cleanup_old_versions service textanalyzer
+            cleanup_old_versions service web
+            cleanup_old_versions service asynqmon
+            cleanup_old_versions service tempo
+            cleanup_old_versions service prometheus
+            cleanup_old_versions service loki
+            cleanup_old_versions service grafana
+            echo ""
+
+            # Clean up old Deployments (all versions except current)
+            echo "=== Cleaning up Deployments ==="
+            cleanup_old_versions deployment controller
+            cleanup_old_versions deployment scheduler
+            cleanup_old_versions deployment scraper
+            cleanup_old_versions deployment textanalyzer
+            cleanup_old_versions deployment web
+            cleanup_old_versions deployment asynqmon
+            cleanup_old_versions deployment grafana
+            echo ""
+
+            # Clean up old StatefulSets (all versions except current)
+            echo "=== Cleaning up StatefulSets ==="
+            cleanup_old_versions statefulset prometheus
+            cleanup_old_versions statefulset loki
+            cleanup_old_versions statefulset tempo
+            echo ""
+
+            # Clean up old HPAs (all versions except current)
+            echo "=== Cleaning up HPAs ==="
+            cleanup_old_versions hpa controller
+            cleanup_old_versions hpa textanalyzer
+            echo ""
+
+            # Clean up old Canaries (all versions except current)
+            {{- if .Values.flagger.enabled }}
+            echo "=== Cleaning up Flagger Canaries ==="
+            cleanup_old_versions canary controller
+            cleanup_old_versions canary scheduler
+            cleanup_old_versions canary scraper
+            cleanup_old_versions canary textanalyzer
+            echo ""
+            {{- end }}
+
+            echo ""
+            echo "✓ Cleanup completed successfully"
+{{- end }}
