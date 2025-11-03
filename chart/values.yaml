@@ -36,6 +36,14 @@ imagePullSecrets: []
 # Example:
 # - name: ghcr-secret
 
+# Image registry credentials (for creating pull secret)
+# Set via --set flags in CI/CD or Pulumi
+imageRegistry:
+  createPullSecret: false  # Set to true in production
+  server: ghcr.io
+  username: ""  # GitHub username
+  password: ""  # GitHub PAT or GITHUB_TOKEN
+
 # Controller service configuration
 controller:
   enabled: true

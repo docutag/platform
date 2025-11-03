@@ -11,6 +11,13 @@ global:
 imagePullSecrets:
   - name: ghcr-secret
 
+# Image registry credentials - set via CI/CD --set flags
+imageRegistry:
+  createPullSecret: true
+  server: ghcr.io
+  username: ""  # Set via --set in GitHub Actions
+  password: ""  # Set via --set in GitHub Actions
+
 controller:
   replicaCount: 3
   autoscaling:

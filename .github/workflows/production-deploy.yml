@@ -78,7 +78,9 @@ jobs:
             --wait \
             --timeout 10m \
             --values ./chart/values-production.yaml \
-            --set global.imageVersion="$VERSION"
+            --set global.imageVersion="$VERSION" \
+            --set imageRegistry.username="${{ github.actor }}" \
+            --set imageRegistry.password="${{ secrets.GITHUB_TOKEN }}"
 
       - name: Verify deployment
         run: |
