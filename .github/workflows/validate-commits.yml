@@ -20,6 +20,9 @@ jobs:
           fetch-depth: 0  # Fetch all history to validate all commits in PR
           ref: ${{ github.event.pull_request.head.sha }}  # Checkout PR branch to get scripts
 
+      - name: Make validation script executable
+        run: chmod +x scripts/validate-commit-message.sh
+
       - name: Validate commit messages
         run: |
           set -e
