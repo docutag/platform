@@ -238,9 +238,23 @@ ingress:
 # Upgrade to new version
 helm upgrade docutag ./chart -f ./chart/values-staging.yaml
 
+# Upgrade with automatic rollback on failure (recommended for production)
+helm upgrade docutag ./chart \
+  -f ./chart/values-production.yaml \
+  --atomic \
+  --cleanup-on-fail \
+  --wait \
+  --timeout 10m
+
 # Force pod restart
 helm upgrade docutag ./chart --recreate-pods
 ```
+
+**Automatic Rollback Options:**
+- `--atomic`: Automatically rolls back on deployment failure (recommended)
+- `--cleanup-on-fail`: Removes resources created during failed install
+- `--wait`: Waits for all resources to be ready before marking release as successful
+- `--timeout`: Maximum time to wait (default: 5m, recommended: 10m for production)
 
 ## Testing
 

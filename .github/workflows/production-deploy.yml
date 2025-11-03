@@ -71,10 +71,14 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
 
           # Deploy using Helm directly (faster than Pulumi for app updates)
+          # --atomic ensures automatic rollback if deployment fails
+          # --cleanup-on-fail removes resources created during failed install
           helm upgrade docutag ./chart \
             --namespace docutag \
             --create-namespace \
             --install \
+            --atomic \
+            --cleanup-on-fail \
             --wait \
             --timeout 10m \
             --values ./chart/values-production.yaml \
