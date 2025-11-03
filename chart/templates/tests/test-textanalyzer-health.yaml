@@ -21,7 +21,7 @@ spec:
         set -e
         echo "Testing textanalyzer service..."
 
-        BASE_URL="http://{{ include "docutag.fullname" . }}-textanalyzer:8080"
+        BASE_URL="http://{{ include "docutag.componentFullname" (dict "component" "textanalyzer" "context" .) }}:8080"
 
         # Wait for service to be ready
         sleep 10

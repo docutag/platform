@@ -52,7 +52,7 @@ spec:
               name: {{ include "docutag.postgresqlSecretName" . }}
               key: {{ if .Values.postgresql.enabled }}password{{ else }}postgres-password{{ end }}
         - name: TEMPO_ENDPOINT
-          value: "{{ include "docutag.fullname" . }}-tempo:4317"
+          value: "{{ include "docutag.componentFullname" (dict "component" "tempo" "context" .) }}:4317"
         livenessProbe:
           {{- toYaml .Values.scheduler.livenessProbe | nindent 12 }}
         readinessProbe:

@@ -54,25 +54,25 @@ data:
       # Scrape DocuTag services
       - job_name: 'docutag-controller'
         static_configs:
-          - targets: ['{{ include "docutag.fullname" . }}-controller:8080']
+          - targets: ['{{ include "docutag.componentFullname" (dict "component" "controller" "context" .) }}:8080']
             labels:
               component: 'controller'
 
       - job_name: 'docutag-scheduler'
         static_configs:
-          - targets: ['{{ include "docutag.fullname" . }}-scheduler:8080']
+          - targets: ['{{ include "docutag.componentFullname" (dict "component" "scheduler" "context" .) }}:8080']
             labels:
               component: 'scheduler'
 
       - job_name: 'docutag-scraper'
         static_configs:
-          - targets: ['{{ include "docutag.fullname" . }}-scraper:8080']
+          - targets: ['{{ include "docutag.componentFullname" (dict "component" "scraper" "context" .) }}:8080']
             labels:
               component: 'scraper'
 
       - job_name: 'docutag-textanalyzer'
         static_configs:
-          - targets: ['{{ include "docutag.fullname" . }}-textanalyzer:8080']
+          - targets: ['{{ include "docutag.componentFullname" (dict "component" "textanalyzer" "context" .) }}:8080']
             labels:
               component: 'textanalyzer'
 {{- end }}

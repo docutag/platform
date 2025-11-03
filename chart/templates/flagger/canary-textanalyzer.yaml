@@ -2,7 +2,7 @@
 apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
-  name: {{ include "docutag.fullname" . }}-textanalyzer
+  name: {{ include "docutag.componentFullname" (dict "component" "textanalyzer" "context" .) }}
   labels:
     {{- include "docutag.labels" . | nindent 4 }}
     app.kubernetes.io/component: textanalyzer
@@ -10,7 +10,7 @@ spec:
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "docutag.fullname" . }}-textanalyzer
+    name: {{ include "docutag.componentFullname" (dict "component" "textanalyzer" "context" .) }}
 
   service:
     port: {{ .Values.textanalyzer.service.port }}

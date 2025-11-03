@@ -25,7 +25,7 @@ spec:
         sleep 5
 
         # Test health endpoint
-        response=$(curl -s -o /dev/null -w "%{http_code}" http://{{ include "docutag.fullname" . }}-controller:8080/health)
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://{{ include "docutag.componentFullname" (dict "component" "controller" "context" .) }}:8080/health)
 
         if [ "$response" = "200" ]; then
           echo "✓ Controller health check passed (HTTP $response)"

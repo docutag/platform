@@ -21,7 +21,7 @@ spec:
         set -e
         echo "Testing controller API endpoints..."
 
-        BASE_URL="http://{{ include "docutag.fullname" . }}-controller:8080"
+        BASE_URL="http://{{ include "docutag.componentFullname" (dict "component" "controller" "context" .) }}:8080"
 
         # Wait for service to be ready
         echo "Waiting for controller service to be ready..."
