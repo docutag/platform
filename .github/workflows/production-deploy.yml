@@ -83,8 +83,6 @@ jobs:
             --timeout 10m \
             --values ./chart/values-production.yaml \
             --set global.imageVersion="$VERSION" \
-            --set imageRegistry.username="${{ github.actor }}" \
-            --set imageRegistry.password="${{ secrets.GH_TOKEN }}" \
             --set scraper.storage.s3.accessKeyId="${{ secrets.SPACES_ACCESS_KEY_ID }}" \
             --set scraper.storage.s3.secretAccessKey="${{ secrets.SPACES_SECRET_ACCESS_KEY }}"
 
