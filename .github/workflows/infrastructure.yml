@@ -86,6 +86,15 @@ jobs:
           pulumi config set enableFlagger true
           pulumi config set useExternalDatabase false  # Use self-hosted PostgreSQL
 
+          # Set initial imageVersion if not already set
+          # Note: production-deploy workflow updates this on each release
+          if ! pulumi config get imageVersion &>/dev/null; then
+            echo "Setting initial imageVersion to 1.5.0"
+            pulumi config set imageVersion 1.5.0
+          else
+            echo "imageVersion already set to: $(pulumi config get imageVersion)"
+          fi
+
           # Optional custom Prometheus (if different from default)
           # pulumi config set prometheusAddress "http://docutag-prometheus.docutag:9090"
 

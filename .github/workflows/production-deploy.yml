@@ -66,6 +66,21 @@ jobs:
           cd chart
           helm dependency build
 
+      - name: Update Pulumi image version config
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Update Pulumi config to match the version being deployed
+          # This prevents drift when infrastructure workflow runs
+          cd infra
+          pulumi login
+          pulumi stack select production
+          pulumi config set imageVersion "$VERSION"
+
+          echo "Updated Pulumi config: imageVersion=$VERSION"
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
       - name: Deploy with Helm
         run: |
           VERSION="${{ steps.version.outputs.version }}"
