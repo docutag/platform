@@ -26,7 +26,7 @@ permissions:
   id-token: write  # For OIDC if using it
 
 concurrency:
-  group: infrastructure-deploy
+  group: production-deployment  # Shared with production-deploy.yml to prevent conflicts
   cancel-in-progress: false
 
 jobs:
@@ -86,11 +86,15 @@ jobs:
           pulumi config set enableFlagger true
           pulumi config set useExternalDatabase false  # Use self-hosted PostgreSQL
 
+          # Skip application deployment in infrastructure workflow
+          # Application is deployed separately via production-deploy.yml
+          pulumi config set skipAppDeployment true
+
           # Set initial imageVersion if not already set
           # Note: production-deploy workflow updates this on each release
           if ! pulumi config get imageVersion &>/dev/null; then
-            echo "Setting initial imageVersion to 1.5.0"
-            pulumi config set imageVersion 1.5.0
+            echo "Setting initial imageVersion to 1.6.0"
+            pulumi config set imageVersion 1.6.0
           else
             echo "imageVersion already set to: $(pulumi config get imageVersion)"
           fi
