@@ -18,7 +18,7 @@ permissions:
   packages: read
 
 concurrency:
-  group: production-release-deploy
+  group: production-deployment  # Shared with infrastructure.yml to prevent conflicts
   cancel-in-progress: false
 
 jobs:
